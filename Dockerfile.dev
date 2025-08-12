@@ -1,20 +1,22 @@
-# ---- Estágio de Build ----
-FROM node:20-alpine AS builder 
+# Use a specific Node.js version for consistency. 'alpine' is a lightweight version.
+FROM node:20-alpine
 
-WORKDIR /app
+# Set the working directory inside the container.
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json first to leverage Docker's layer caching.
+# This step will only be re-run if these files change.
 COPY package*.json ./
+
+# Install ALL dependencies, including the devDependencies needed for the dev server.
 RUN npm install
+
+# Copy the rest of your application's source code.
 COPY . .
-RUN npm run build
 
-# ---- Estágio de Produção ----
-FROM node:20-alpine 
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --only=production
-COPY --from=builder /app/dist ./dist
-
+# Expose the port the app runs on.
 EXPOSE 3000
 
-CMD ["node", "dist/main"]
+# The command to run the app will be provided by docker-compose.yml,
+# but this serves as a good default for a development container.
+CMD [ "npm", "run", "start:dev" ]

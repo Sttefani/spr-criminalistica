@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   api:
     container_name: spr_pericia_api
@@ -11,8 +10,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - .:/app
-      - /app/node_modules
+      - .:/usr/src/app
+      - /usr/src/app/node_modules # Prevents local node_modules from overwriting the container's
     environment:
       NODE_ENV: development
       DB_HOST: postgres
@@ -20,12 +19,13 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
       DB_DATABASE: spr_pericia_db
-      MINIO_ENDPOINT: minio
-      MINIO_PORT: 9000
+      # Corrected MinIO credentials to match what the application expects
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
       MINIO_USE_SSL: 'false'
-      JWT_SECRET: MINHA_CHAVE_SECRETA_SUPER_LONGA_E_DIFICIL_DE_ADIVINHAR_12345
+      MINIO_BUCKET: 'spr-pericia'
     depends_on:
       postgres:
         condition: service_healthy
@@ -54,6 +54,7 @@ services:
     restart: always
     command: server /data --console-address ":9001"
     environment:
+      # These variables are for the MinIO container itself
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     ports:

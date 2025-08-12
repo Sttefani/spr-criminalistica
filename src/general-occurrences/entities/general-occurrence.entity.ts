@@ -20,7 +20,7 @@ export class GeneralOccurrence {
   id: string;
 
   @Column({ unique: true, nullable: true })
-  caseNumber: string | null;
+  caseNumber: string;
 
   // --- Dados do Procedimento (Opcionais no início) ---
   @ManyToOne(() => Procedure, { nullable: true })
@@ -28,7 +28,7 @@ export class GeneralOccurrence {
   procedure: Procedure | null;
 
   @Column({ nullable: true })
-  procedureNumber: string | null;
+  procedureNumber: string;
 
   // --- Datas e Descrições (Obrigatórios) ---
   @Column({ type: 'timestamp' })
