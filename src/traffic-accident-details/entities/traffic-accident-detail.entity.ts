@@ -1,5 +1,4 @@
 // Arquivo: src/traffic-accident-details/entities/traffic-accident-detail.entity.ts
-
 import { GeneralOccurrence } from 'src/general-occurrences/entities/general-occurrence.entity';
 import {
   Entity,
@@ -18,17 +17,36 @@ export class TrafficAccidentDetail {
   id: string;
 
   // --- Relacionamento Um-para-Um com a Ocorrência Geral ---
-  // Cada registro de detalhe pertence a uma única ocorrência.
+  // A cidade e outros dados gerais são herdados daqui.
   @OneToOne(() => GeneralOccurrence, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'occurrence_id' })
   occurrence: GeneralOccurrence;
 
-  // --- Campos Específicos para Acidente de Trânsito ---
-  @Column({ type: 'text' })
-  address: string; // Endereço completo do acidente
+  // --- Endereço Estruturado ---
+  @Column()
+  street: string; // Ex: "Avenida Paulista"
 
-  // Para 'veículos' e 'vítimas', usar JSON é a forma mais flexível
-  // de armazenar listas de objetos com estruturas variáveis.
+  @Column({ nullable: true })
+  number?: string; // Ex: "1578" ou "s/n"
+
+  @Column()
+  neighborhood: string; // Ex: "Bela Vista"
+
+  @Column({ nullable: true })
+  zipCode?: string; // CEP, Ex: "01310-200"
+
+  @Column({ type: 'text', nullable: true })
+  referencePoint?: string; // Ex: "Próximo ao MASP"
+
+  // --- Geolocalização (Ideal para integração com mapas) ---
+  @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
+  latitude?: number; // Ex: -23.56135
+
+  @Column({ type: 'decimal', precision: 11, scale: 8, nullable: true })
+  longitude?: number; // Ex: -46.65653
+
+  // --- Dados Dinâmicos ---
+  // JSONB é perfeito para armazenar listas de objetos com estrutura flexível.
   @Column({ type: 'jsonb', nullable: true })
   involvedVehicles?: any[]; // Ex: [{ "placa": "ABC1234", "modelo": "Gol", "danos": "..." }]
 
