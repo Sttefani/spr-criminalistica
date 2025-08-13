@@ -1,6 +1,6 @@
 // Arquivo: src/general-occurrences/dto/create-general-occurrence.dto.ts
 
-import { IsString, IsNotEmpty, IsUUID, IsDateString, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsUUID, IsDateString, IsOptional, IsObject } from 'class-validator';
 
 export class CreateGeneralOccurrenceDto {
   // --- Relacionamentos Obrigatórios ---
@@ -41,4 +41,8 @@ export class CreateGeneralOccurrenceDto {
   @IsString()
   @IsNotEmpty({ message: 'O histórico é obrigatório.' })
   history: string;
+
+  @IsObject()
+  @IsOptional()
+  additionalFields?: any;
 }

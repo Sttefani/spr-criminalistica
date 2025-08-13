@@ -10,7 +10,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enums/users-role.enum';
 import { User } from 'src/users/entities/users.entity';
 
-// Perfis que podem criar ou editar uma ocorrência (antes de ser travada)
+// Perfis que podem criar ou iniciar a edição de uma ocorrência
 const ALLOWED_ROLES_TO_MANAGE = [
   UserRole.SERVIDOR_ADMINISTRATIVO,
   UserRole.PERITO_OFICIAL,
@@ -76,3 +76,6 @@ export class GeneralOccurrencesController {
     return this.occurrencesService.remove(id, currentUser);
   }
 }
+
+    
+

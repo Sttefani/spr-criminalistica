@@ -23,6 +23,11 @@ import { DefinitiveDrugTestsModule } from './definitive-drug-tests/definitive-dr
 import { GeneralOccurrencesModule } from './general-occurrences/general-occurrences.module';
 import { RequestedExamsModule } from './requested-exams/requested-exams.module';
 import { TrafficAccidentDetailsModule } from './traffic-accident-details/traffic-accident-details.module';
+import { PropertyCrimeDetailsModule } from './property-crime-details/property-crime-details.module';
+import { EventEmitterModule } from '@nestjs/event-emitter'; 
+import { CrimeAgainstPersonDetailsModule } from './crime-against-person-details/crime-against-person-details.module';
+import { GeneticComparisonDetailsModule } from './genetic-comparison-details/genetic-comparison-details.module';
+import { ComputerForensicsDetailsModule } from './computer-forensics-details/computer-forensics-details.module';
 
 @Module({
   imports: [
@@ -51,8 +56,14 @@ import { TrafficAccidentDetailsModule } from './traffic-accident-details/traffic
     GeneralOccurrencesModule,
     RequestedExamsModule,
     TrafficAccidentDetailsModule,
+    PropertyCrimeDetailsModule,
+    EventEmitterModule.forRoot(),
+    CrimeAgainstPersonDetailsModule,
+    GeneticComparisonDetailsModule,
+    ComputerForensicsDetailsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
+  
 })
 export class AppModule {}

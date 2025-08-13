@@ -22,7 +22,7 @@ export class CreateTrafficAccidentDetailDto {
   @IsNotEmpty({ message: 'O nome da rua é obrigatório.' })
   street: string;
 
-  @IsString({ message: 'O número deve ser um texto.' })
+  @IsString({ message: 'O número é armazenado em forma de texto.' })
   @IsOptional()
   number?: string;
 

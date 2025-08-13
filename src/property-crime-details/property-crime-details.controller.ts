@@ -1,9 +1,9 @@
-// Arquivo: src/traffic-accident-details/traffic-accident-details.controller.ts
+// Arquivo: src/property-crime-details/property-crime-details.controller.ts
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
-import { TrafficAccidentDetailsService } from './traffic-accident-details.service';
-import { CreateTrafficAccidentDetailDto } from './dto/create-traffic-accident-detail.dto';
-import { UpdateTrafficAccidentDetailDto } from './dto/update-traffic-accident-detail.dto';
+import { PropertyCrimeDetailsService } from './property-crime-details.service';
+import { CreatePropertyCrimeDetailDto } from './dto/create-property-crime-detail.dto';
+import { UpdatePropertyCrimeDetailDto } from './dto/update-property-crime-detail.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guards/roles.guards';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -16,44 +16,30 @@ const ALLOWED_ROLES_TO_MANAGE = [
   UserRole.PERITO_OFICIAL,
 ];
 
-@Controller('traffic-accident-details')
+@Controller('property-crime-details')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-export class TrafficAccidentDetailsController {
-  constructor(private readonly detailsService: TrafficAccidentDetailsService) {}
+export class PropertyCrimeDetailsController {
+  constructor(private readonly detailsService: PropertyCrimeDetailsService) {}
 
-  /**
-   * Cria um novo registro de detalhes para uma ocorrência.
-   * A rota ideal seria aninhada, mas para simplificar, usamos uma rota de nível superior.
-   */
   @Post()
   @Roles(...ALLOWED_ROLES_TO_MANAGE)
-  create(@Body() createDto: CreateTrafficAccidentDetailDto, @Req() req: any) {
+  create(@Body() createDto: CreatePropertyCrimeDetailDto, @Req() req: any) {
     const currentUser: User = req.user;
     return this.detailsService.create(createDto, currentUser);
   }
 
-  /**
-   * Busca os detalhes de uma ocorrência específica.
-   * A permissão de visualização é herdada da ocorrência pai.
-   */
   @Get('by-occurrence/:occurrenceId')
   findByOccurrenceId(@Param('occurrenceId') occurrenceId: string) {
     return this.detailsService.findByOccurrenceId(occurrenceId);
   }
 
-  /**
-   * Atualiza os detalhes de um acidente.
-   */
   @Patch(':id')
   @Roles(...ALLOWED_ROLES_TO_MANAGE)
-  update(@Param('id') id: string, @Body() updateDto: UpdateTrafficAccidentDetailDto, @Req() req: any) {
+  update(@Param('id') id: string, @Body() updateDto: UpdatePropertyCrimeDetailDto, @Req() req: any) {
     const currentUser: User = req.user;
     return this.detailsService.update(id, updateDto, currentUser);
   }
 
-  /**
-   * Remove os detalhes de um acidente.
-   */
   @Delete(':id')
   @Roles(UserRole.SUPER_ADMIN)
   remove(@Param('id') id: string, @Req() req: any) {

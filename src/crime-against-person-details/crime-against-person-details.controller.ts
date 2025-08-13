@@ -1,9 +1,9 @@
-// Arquivo: src/traffic-accident-details/traffic-accident-details.controller.ts
+// Arquivo: src/crime-against-person-details/crime-against-person-details.controller.ts
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
-import { TrafficAccidentDetailsService } from './traffic-accident-details.service';
-import { CreateTrafficAccidentDetailDto } from './dto/create-traffic-accident-detail.dto';
-import { UpdateTrafficAccidentDetailDto } from './dto/update-traffic-accident-detail.dto';
+import { CrimeAgainstPersonDetailsService } from './crime-against-person-details.service';
+import { CreateCrimeAgainstPersonDetailDto } from './dto/create-crime-against-person-detail.dto';
+import { UpdateCrimeAgainstPersonDetailDto } from './dto/update-crime-against-person-detail.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guards/roles.guards';
 import { Roles } from 'src/auth/decorators/roles.decorator';
@@ -16,18 +16,14 @@ const ALLOWED_ROLES_TO_MANAGE = [
   UserRole.PERITO_OFICIAL,
 ];
 
-@Controller('traffic-accident-details')
+@Controller('crime-against-person-details')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-export class TrafficAccidentDetailsController {
-  constructor(private readonly detailsService: TrafficAccidentDetailsService) {}
+export class CrimeAgainstPersonDetailsController {
+  constructor(private readonly detailsService: CrimeAgainstPersonDetailsService) {}
 
-  /**
-   * Cria um novo registro de detalhes para uma ocorrência.
-   * A rota ideal seria aninhada, mas para simplificar, usamos uma rota de nível superior.
-   */
   @Post()
   @Roles(...ALLOWED_ROLES_TO_MANAGE)
-  create(@Body() createDto: CreateTrafficAccidentDetailDto, @Req() req: any) {
+  create(@Body() createDto: CreateCrimeAgainstPersonDetailDto, @Req() req: any) {
     const currentUser: User = req.user;
     return this.detailsService.create(createDto, currentUser);
   }
@@ -41,19 +37,13 @@ export class TrafficAccidentDetailsController {
     return this.detailsService.findByOccurrenceId(occurrenceId);
   }
 
-  /**
-   * Atualiza os detalhes de um acidente.
-   */
   @Patch(':id')
   @Roles(...ALLOWED_ROLES_TO_MANAGE)
-  update(@Param('id') id: string, @Body() updateDto: UpdateTrafficAccidentDetailDto, @Req() req: any) {
+  update(@Param('id') id: string, @Body() updateDto: UpdateCrimeAgainstPersonDetailDto, @Req() req: any) {
     const currentUser: User = req.user;
     return this.detailsService.update(id, updateDto, currentUser);
   }
 
-  /**
-   * Remove os detalhes de um acidente.
-   */
   @Delete(':id')
   @Roles(UserRole.SUPER_ADMIN)
   remove(@Param('id') id: string, @Req() req: any) {

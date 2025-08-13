@@ -13,6 +13,8 @@ import {
 import { OccurrenceStatus } from '../enums/occurrence-status.enum';
 import { RequestedExam } from 'src/requested-exams/entities/requested-exam.entity';
 import { TrafficAccidentDetail } from 'src/traffic-accident-details/entities/traffic-accident-detail.entity';
+import { PropertyCrimeDetail } from 'src/property-crime-details/entities/property-crime-detail.entity';
+import { CrimeAgainstPersonDetail } from 'src/crime-against-person-details/entities/crime-against-person-detail.entity';
 
 @Entity('general_occurrences')
 export class GeneralOccurrence {
@@ -81,6 +83,26 @@ export class GeneralOccurrence {
 
   @OneToOne(() => TrafficAccidentDetail, (details) => details.occurrence, { nullable: true, cascade: true })
   trafficAccidentDetails: TrafficAccidentDetail | null;
+
+  @OneToOne(
+    () => PropertyCrimeDetail,
+    (details) => details.occurrence,
+    { nullable: true, cascade: true },
+  )
+  propertyCrimeDetails?: PropertyCrimeDetail;
+
+   @OneToOne(
+    () => CrimeAgainstPersonDetail,
+    (details) => details.occurrence,
+    { nullable: true, cascade: true },
+  )
+  crimeAgainstPersonDetails?: CrimeAgainstPersonDetail;
+
+  // --- CAMPO PARA DADOS DINÂMICOS ---
+  @Column({ type: 'jsonb', nullable: true })
+  additionalFields?: any; // Usamos 'any' porque a estrutura é flexível
+  // --- FIM DO CAMPO DINÂMICO ---
+  // --- FIM DO RELACIONAMENTO ---
 
   // --- Colunas de Auditoria ---
   @CreateDateColumn()
