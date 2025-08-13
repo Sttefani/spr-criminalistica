@@ -23,17 +23,17 @@ import { BallisticsDetail } from 'src/ballistics-details/entities/ballistics-det
 @Entity('general_occurrences')
 export class GeneralOccurrence {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: string 
 
-  @Column({ unique: true, nullable: true })
-  caseNumber: string | null;
+  @Column({ type: 'varchar', unique: true, nullable: false })
+  caseNumber: string 
 
   @ManyToOne(() => Procedure, { nullable: true })
   @JoinColumn({ name: 'procedure_id' })
-  procedure: Procedure | null;
+  procedure: Procedure 
 
   @Column({ nullable: true })
-  procedureNumber: string | null;
+  procedureNumber: string 
 
   @Column({ type: 'timestamp' })
   occurrenceDate: Date;
@@ -47,15 +47,15 @@ export class GeneralOccurrence {
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'expert_id' })
-  responsibleExpert: User | null;
+  responsibleExpert: User 
 
   @ManyToOne(() => RequestingUnit, { nullable: true })
   @JoinColumn({ name: 'requesting_unit_id' })
-  requestingUnit: RequestingUnit | null;
+  requestingUnit: RequestingUnit 
 
   @ManyToOne(() => Authority, { nullable: true })
   @JoinColumn({ name: 'requesting_authority_id' })
-  requestingAuthority: Authority | null;
+  requestingAuthority: Authority 
 
   @ManyToOne(() => City)
   @JoinColumn({ name: 'city_id' })
