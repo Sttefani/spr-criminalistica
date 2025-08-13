@@ -28,6 +28,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CrimeAgainstPersonDetailsModule } from './crime-against-person-details/crime-against-person-details.module';
 import { GeneticComparisonDetailsModule } from './genetic-comparison-details/genetic-comparison-details.module';
 import { ComputerForensicsDetailsModule } from './computer-forensics-details/computer-forensics-details.module';
+import { BiologyForensicsDetailsModule } from './biology-forensics-details/biology-forensics-details.module';
+import { BallisticsDetailsModule } from './ballistics-details/ballistics-details.module';
 
 @Module({
   imports: [
@@ -61,6 +63,8 @@ import { ComputerForensicsDetailsModule } from './computer-forensics-details/com
     CrimeAgainstPersonDetailsModule,
     GeneticComparisonDetailsModule,
     ComputerForensicsDetailsModule,
+    BiologyForensicsDetailsModule,
+    BallisticsDetailsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

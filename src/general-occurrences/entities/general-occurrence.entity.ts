@@ -15,6 +15,10 @@ import { RequestedExam } from 'src/requested-exams/entities/requested-exam.entit
 import { TrafficAccidentDetail } from 'src/traffic-accident-details/entities/traffic-accident-detail.entity';
 import { PropertyCrimeDetail } from 'src/property-crime-details/entities/property-crime-detail.entity';
 import { CrimeAgainstPersonDetail } from 'src/crime-against-person-details/entities/crime-against-person-detail.entity';
+import { GeneticComparisonDetail } from 'src/genetic-comparison-details/entities/genetic-comparison-detail.entity';
+import { ComputerForensicsDetail } from 'src/computer-forensics-details/entities/computer-forensics-detail.entity';
+import { BiologyForensicsDetail } from 'src/biology-forensics-details/entities/biology-forensics-detail.entity';
+import { BallisticsDetail } from 'src/ballistics-details/entities/ballistics-detail.entity';
 
 @Entity('general_occurrences')
 export class GeneralOccurrence {
@@ -22,24 +26,21 @@ export class GeneralOccurrence {
   id: string;
 
   @Column({ unique: true, nullable: true })
-  caseNumber: string;
+  caseNumber: string | null;
 
-  // --- Dados do Procedimento (Opcionais no início) ---
   @ManyToOne(() => Procedure, { nullable: true })
   @JoinColumn({ name: 'procedure_id' })
   procedure: Procedure | null;
 
   @Column({ nullable: true })
-  procedureNumber: string;
+  procedureNumber: string | null;
 
-  // --- Datas e Descrições (Obrigatórios) ---
   @Column({ type: 'timestamp' })
   occurrenceDate: Date;
 
   @Column({ type: 'text' })
   history: string;
 
-  // --- Relacionamentos de Atribuição (Serviço é obrigatório, Perito opcional) ---
   @ManyToOne(() => ForensicService)
   @JoinColumn({ name: 'forensic_service_id' })
   forensicService: ForensicService;
@@ -48,7 +49,6 @@ export class GeneralOccurrence {
   @JoinColumn({ name: 'expert_id' })
   responsibleExpert: User | null;
 
-  // --- Relacionamentos de Origem (Opcionais no início) ---
   @ManyToOne(() => RequestingUnit, { nullable: true })
   @JoinColumn({ name: 'requesting_unit_id' })
   requestingUnit: RequestingUnit | null;
@@ -57,12 +57,10 @@ export class GeneralOccurrence {
   @JoinColumn({ name: 'requesting_authority_id' })
   requestingAuthority: Authority | null;
 
-  // --- Localidade (Obrigatória) ---
   @ManyToOne(() => City)
   @JoinColumn({ name: 'city_id' })
   city: City;
 
-  // --- Controle de Status e Edição ---
   @Column({
     type: 'enum',
     enum: OccurrenceStatus,
@@ -77,32 +75,34 @@ export class GeneralOccurrence {
   @Column({ type: 'boolean', default: false })
   isLocked: boolean;
 
-  // --- Relacionamentos Filhos ---
+  @Column({ type: 'jsonb', nullable: true })
+  additionalFields: any;
+
+  // --- RELACIONAMENTOS FILHOS ---
+
   @OneToMany(() => RequestedExam, (requestedExam) => requestedExam.occurrence)
   requestedExams: RequestedExam[];
 
   @OneToOne(() => TrafficAccidentDetail, (details) => details.occurrence, { nullable: true, cascade: true })
   trafficAccidentDetails: TrafficAccidentDetail | null;
+  
+  @OneToOne(() => PropertyCrimeDetail, (details) => details.occurrence, { nullable: true, cascade: true })
+  propertyCrimeDetails: PropertyCrimeDetail | null;
 
-  @OneToOne(
-    () => PropertyCrimeDetail,
-    (details) => details.occurrence,
-    { nullable: true, cascade: true },
-  )
-  propertyCrimeDetails?: PropertyCrimeDetail;
+  @OneToOne(() => CrimeAgainstPersonDetail, (details) => details.occurrence, { nullable: true, cascade: true })
+  crimeAgainstPersonDetails: CrimeAgainstPersonDetail | null;
 
-   @OneToOne(
-    () => CrimeAgainstPersonDetail,
-    (details) => details.occurrence,
-    { nullable: true, cascade: true },
-  )
-  crimeAgainstPersonDetails?: CrimeAgainstPersonDetail;
+  @OneToOne(() => GeneticComparisonDetail, (details) => details.occurrence, { nullable: true, cascade: true })
+  geneticComparisonDetails: GeneticComparisonDetail | null;
 
-  // --- CAMPO PARA DADOS DINÂMICOS ---
-  @Column({ type: 'jsonb', nullable: true })
-  additionalFields?: any; // Usamos 'any' porque a estrutura é flexível
-  // --- FIM DO CAMPO DINÂMICO ---
-  // --- FIM DO RELACIONAMENTO ---
+  @OneToOne(() => ComputerForensicsDetail, (details) => details.occurrence, { nullable: true, cascade: true })
+  computerForensicsDetails: ComputerForensicsDetail | null;
+  
+  @OneToOne(() => BiologyForensicsDetail, (details) => details.occurrence, { nullable: true, cascade: true })
+  biologyForensicsDetails: BiologyForensicsDetail | null;
+
+  @OneToOne(() => BallisticsDetail, (details) => details.occurrence, { nullable: true, cascade: true })
+  ballisticsDetails: BallisticsDetail | null;
 
   // --- Colunas de Auditoria ---
   @CreateDateColumn()
