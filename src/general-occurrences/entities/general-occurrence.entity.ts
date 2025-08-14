@@ -19,21 +19,25 @@ import { GeneticComparisonDetail } from 'src/genetic-comparison-details/entities
 import { ComputerForensicsDetail } from 'src/computer-forensics-details/entities/computer-forensics-detail.entity';
 import { BiologyForensicsDetail } from 'src/biology-forensics-details/entities/biology-forensics-detail.entity';
 import { BallisticsDetail } from 'src/ballistics-details/entities/ballistics-detail.entity';
+import { DocumentoscopyDetail } from 'src/documentoscopy-details/entities/documentoscopy-detail.entity';
+import { VehicleIdentificationDetail } from 'src/vehicle-identification-details/entities/vehicle-identification-detail.entity';
+import { EnvironmentalCrimeDetail } from 'src/environmental-crime-details/entities/environmental-crime-detail.entity';
+import { ChemistryForensicsDetail } from 'src/chemistry-forensics-details/entities/chemistry-forensics-detail.entity';
 
 @Entity('general_occurrences')
 export class GeneralOccurrence {
   @PrimaryGeneratedColumn('uuid')
-  id: string 
+  id: string;
 
-  @Column({ type: 'varchar', unique: true, nullable: false })
-  caseNumber: string 
+  @Column({ type: 'varchar', unique: true, nullable: true })
+  caseNumber: string | null; // TIPO CORRETO
 
   @ManyToOne(() => Procedure, { nullable: true })
   @JoinColumn({ name: 'procedure_id' })
-  procedure: Procedure 
+  procedure: Procedure | null; // TIPO CORRETO
 
-  @Column({ nullable: true })
-  procedureNumber: string 
+  @Column({ type: 'varchar', nullable: true })
+  procedureNumber: string | null; // TIPO CORRETO
 
   @Column({ type: 'timestamp' })
   occurrenceDate: Date;
@@ -47,25 +51,21 @@ export class GeneralOccurrence {
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'expert_id' })
-  responsibleExpert: User 
+  responsibleExpert: User | null; // TIPO CORRETO
 
   @ManyToOne(() => RequestingUnit, { nullable: true })
   @JoinColumn({ name: 'requesting_unit_id' })
-  requestingUnit: RequestingUnit 
+  requestingUnit: RequestingUnit | null; // TIPO CORRETO
 
   @ManyToOne(() => Authority, { nullable: true })
   @JoinColumn({ name: 'requesting_authority_id' })
-  requestingAuthority: Authority 
+  requestingAuthority: Authority | null; // TIPO CORRETO
 
   @ManyToOne(() => City)
   @JoinColumn({ name: 'city_id' })
   city: City;
 
-  @Column({
-    type: 'enum',
-    enum: OccurrenceStatus,
-    default: OccurrenceStatus.PENDING,
-  })
+  @Column({ type: 'enum', enum: OccurrenceStatus, default: OccurrenceStatus.PENDING })
   status: OccurrenceStatus;
 
   @ManyToOne(() => User)
@@ -79,7 +79,6 @@ export class GeneralOccurrence {
   additionalFields: any;
 
   // --- RELACIONAMENTOS FILHOS ---
-
   @OneToMany(() => RequestedExam, (requestedExam) => requestedExam.occurrence)
   requestedExams: RequestedExam[];
 
@@ -104,6 +103,32 @@ export class GeneralOccurrence {
   @OneToOne(() => BallisticsDetail, (details) => details.occurrence, { nullable: true, cascade: true })
   ballisticsDetails: BallisticsDetail | null;
 
+  @OneToOne(
+    () => DocumentoscopyDetail,
+    (details) => details.occurrence,
+    { nullable: true, cascade: true },
+  )
+  documentoscopyDetails: DocumentoscopyDetail | null;
+  @OneToOne(
+    () => VehicleIdentificationDetail,
+    (details) => details.occurrence,
+    { nullable: true, cascade: true },
+  )
+  vehicleIdentificationDetails: VehicleIdentificationDetail | null;
+  
+  @OneToOne(
+    () => EnvironmentalCrimeDetail,
+    (details) => details.occurrence,
+    { nullable: true, cascade: true },
+  )
+  environmentalCrimeDetails: EnvironmentalCrimeDetail | null;
+
+   @OneToOne(
+    () => ChemistryForensicsDetail,
+    (details) => details.occurrence,
+    { nullable: true, cascade: true },
+  )
+  chemistryForensicsDetails: ChemistryForensicsDetail | null;
   // --- Colunas de Auditoria ---
   @CreateDateColumn()
   createdAt: Date;

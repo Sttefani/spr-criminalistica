@@ -1,7 +1,7 @@
 # ---- Estágio de Build ----
 # Usamos uma imagem oficial do Node.js como base
-FROM node:18-alpine AS builder
-
+# ---- Estágio de Build ----
+FROM node:20-alpine AS builder
 # Define o diretório de trabalho dentro do container
 WORKDIR /app
 
@@ -18,7 +18,7 @@ RUN npm run build
 
 # ---- Estágio de Produção ----
 # Começamos de novo com uma imagem limpa para manter a imagem final pequena
-FROM node:18-alpine
+FROM node:20-alpine 
 
 WORKDIR /app
 

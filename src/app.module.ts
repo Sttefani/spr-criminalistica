@@ -30,6 +30,14 @@ import { GeneticComparisonDetailsModule } from './genetic-comparison-details/gen
 import { ComputerForensicsDetailsModule } from './computer-forensics-details/computer-forensics-details.module';
 import { BiologyForensicsDetailsModule } from './biology-forensics-details/biology-forensics-details.module';
 import { BallisticsDetailsModule } from './ballistics-details/ballistics-details.module';
+import { DocumentoscopyDetailsModule } from './documentoscopy-details/documentoscopy-details.module';
+import { VehicleIdentificationDetailsModule } from './vehicle-identification-details/vehicle-identification-details.module';
+import { EnvironmentalCrimeDetailsModule } from './environmental-crime-details/environmental-crime-details.module';
+import { ChemistryForensicsDetailsModule } from './chemistry-forensics-details/chemistry-forensics-details.module';
+import { LocationsModule } from './locations/locations.module';
+import { PatrimonyItemsModule } from './patrimony-items/patrimony-items.module';
+import { PatrimonyMovementsModule } from './patrimony-movements/patrimony-movements.module';
+import { PatrimonyClassificationsModule } from './patrimony-classifications/patrimony-classifications.module';
 
 @Module({
   imports: [
@@ -65,6 +73,14 @@ import { BallisticsDetailsModule } from './ballistics-details/ballistics-details
     ComputerForensicsDetailsModule,
     BiologyForensicsDetailsModule,
     BallisticsDetailsModule,
+    DocumentoscopyDetailsModule,
+    VehicleIdentificationDetailsModule,
+    EnvironmentalCrimeDetailsModule,
+    ChemistryForensicsDetailsModule,
+    LocationsModule,
+    PatrimonyItemsModule,
+    PatrimonyMovementsModule,
+    PatrimonyClassificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

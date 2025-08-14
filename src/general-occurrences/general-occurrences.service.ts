@@ -1,6 +1,4 @@
-// Arquivo: src/general-occurrences/general-occurrences.service.ts
-
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { CreateGeneralOccurrenceDto } from './dto/create-general-occurrence.dto';
@@ -16,133 +14,130 @@ import { City } from 'src/cities/entities/city.entity';
 
 @Injectable()
 export class GeneralOccurrencesService {
-  constructor(
-    @InjectRepository(GeneralOccurrence) private occurrencesRepository: Repository<GeneralOccurrence>,
-    @InjectRepository(Procedure) private procedureRepository: Repository<Procedure>,
-    @InjectRepository(ForensicService) private forensicServiceRepository: Repository<ForensicService>,
-    @InjectRepository(User) private userRepository: Repository<User>,
-    @InjectRepository(RequestingUnit) private unitRepository: Repository<RequestingUnit>,
-    @InjectRepository(Authority) private authorityRepository: Repository<Authority>,
-    @InjectRepository(City) private cityRepository: Repository<City>,
-  ) {}
+  constructor(
+    @InjectRepository(GeneralOccurrence) private occurrencesRepository: Repository<GeneralOccurrence>,
+    @InjectRepository(Procedure) private procedureRepository: Repository<Procedure>,
+    @InjectRepository(ForensicService) private forensicServiceRepository: Repository<ForensicService>,
+    @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(RequestingUnit) private unitRepository: Repository<RequestingUnit>,
+    @InjectRepository(Authority) private authorityRepository: Repository<Authority>,
+    @InjectRepository(City) private cityRepository: Repository<City>,
+  ) {}
 
-  async create(createDto: CreateGeneralOccurrenceDto, creatingUser: User): Promise<GeneralOccurrence> {
-    const {
-      procedureId, forensicServiceId, requestingUnitId, requestingAuthorityId,
-      cityId, responsibleExpertId, ...occurrenceData
-    } = createDto;
+  async create(createDto: CreateGeneralOccurrenceDto, creatingUser: User): Promise<GeneralOccurrence> {
+    const {
+      procedureId, forensicServiceId, requestingUnitId, requestingAuthorityId,
+      cityId, responsibleExpertId, ...occurrenceData
+    } = createDto;
 
-    // --- 1. VALIDAÇÃO DE TODAS AS DEPENDÊNCIAS ---
-    // Adicionamos verificações para garantir que os IDs não são nulos ou indefinidos
-    // antes de usá-los, o que resolve o erro de tipagem.
-    if (!forensicServiceId) throw new BadRequestException('O ID do serviço pericial é obrigatório.');
-    const forensicService = await this.forensicServiceRepository.findOneBy({ id: forensicServiceId });
-    if (!forensicService) throw new NotFoundException(`Serviço pericial com ID ${forensicServiceId} não encontrado.`);
+    // 1. Validação das dependências obrigatórias (definidas no DTO)
+    const forensicService = await this.forensicServiceRepository.findOneBy({ id: forensicServiceId });
+    if (!forensicService) throw new NotFoundException(`Serviço pericial com ID ${forensicServiceId} não encontrado.`);
 
-    if (!cityId) throw new BadRequestException('O ID da cidade é obrigatório.');
-    const city = await this.cityRepository.findOneBy({ id: cityId });
-    if (!city) throw new NotFoundException(`Cidade com ID ${cityId} não encontrada.`);
+    const city = await this.cityRepository.findOneBy({ id: cityId });
+    if (!city) throw new NotFoundException(`Cidade com ID ${cityId} não encontrada.`);
 
-    if (!procedureId) throw new BadRequestException('O ID do procedimento é obrigatório.');
-    const procedure = await this.procedureRepository.findOneBy({ id: procedureId });
-    if (!procedure) throw new NotFoundException(`Procedimento com ID ${procedureId} não encontrado.`);
-    
-    if (!requestingUnitId) throw new BadRequestException('O ID da unidade demandante é obrigatório.');
-    const requestingUnit = await this.unitRepository.findOneBy({ id: requestingUnitId });
-    if (!requestingUnit) throw new NotFoundException(`Unidade Demandante com ID ${requestingUnitId} não encontrada.`);
-    
-    if (!requestingAuthorityId) throw new BadRequestException('O ID da autoridade é obrigatório.');
-    const requestingAuthority = await this.authorityRepository.findOneBy({ id: requestingAuthorityId });
-    if (!requestingAuthority) throw new NotFoundException(`Autoridade com ID ${requestingAuthorityId} não encontrada.`);
-    
-    if (!responsibleExpertId) throw new BadRequestException('O ID do perito responsável é obrigatório.');
-    const responsibleExpert = await this.userRepository.findOneBy({ id: responsibleExpertId });
-    if (!responsibleExpert) throw new NotFoundException(`Perito com ID ${responsibleExpertId} não encontrado.`);
-    
-    // --- 2. GERAÇÃO DO NÚMERO DO CASO ---
-    const year = new Date().getFullYear();
-    const countThisYear = await this.occurrencesRepository.count({ where: { caseNumber: Like(`%-${year}`) } });
-    const sequential = countThisYear + 1;
-    const caseNumber = `${sequential}-${year}`;
-
-    // --- 3. CRIAÇÃO DA ENTIDADE ---
+    // 2. Criação da instância inicial da ocorrência
     const newOccurrence = this.occurrencesRepository.create({
-        ...occurrenceData,
-        caseNumber,
-        forensicService,
-        city,
-        procedure,
-        requestingUnit,
-        requestingAuthority,
-        responsibleExpert,
-        createdBy: creatingUser,
+      ...occurrenceData,
+      forensicService,
+      city,
+      createdBy: creatingUser,
     });
 
-    return this.occurrencesRepository.save(newOccurrence);
-  }
+    // 3. Validação e associação das dependências opcionais
+    if (procedureId) {
+      const procedure = await this.procedureRepository.findOneBy({ id: procedureId });
+      if (!procedure) throw new NotFoundException(`Procedimento com ID ${procedureId} não encontrado.`);
+      newOccurrence.procedure = procedure;
+    }
+    if (requestingUnitId) {
+      const unit = await this.unitRepository.findOneBy({ id: requestingUnitId });
+      if (!unit) throw new NotFoundException(`Unidade Demandante com ID ${requestingUnitId} não encontrada.`);
+      newOccurrence.requestingUnit = unit;
+    }
+    if (requestingAuthorityId) {
+      const authority = await this.authorityRepository.findOneBy({ id: requestingAuthorityId });
+      if (!authority) throw new NotFoundException(`Autoridade com ID ${requestingAuthorityId} não encontrada.`);
+      newOccurrence.requestingAuthority = authority;
+    }
+    if (responsibleExpertId) {
+      const expert = await this.userRepository.findOneBy({ id: responsibleExpertId });
+      if (!expert) throw new NotFoundException(`Perito com ID ${responsibleExpertId} não encontrado.`);
+      newOccurrence.responsibleExpert = expert;
+    }
 
-  async findAll(currentUser: User): Promise<GeneralOccurrence[]> {
-    const queryBuilder = this.occurrencesRepository.createQueryBuilder('occurrence')
-      .leftJoinAndSelect('occurrence.procedure', 'procedure')
-      .leftJoinAndSelect('occurrence.forensicService', 'forensicService')
-      .leftJoinAndSelect('occurrence.responsibleExpert', 'expert')
-      .leftJoinAndSelect('occurrence.requestingUnit', 'unit')
-      .leftJoinAndSelect('occurrence.requestingAuthority', 'authority')
-      .leftJoinAndSelect('occurrence.city', 'city')
-      .leftJoinAndSelect('occurrence.createdBy', 'creator');
+    // 4. Geração do número do caso
+    const year = new Date().getFullYear();
+    const countThisYear = await this.occurrencesRepository.count({ where: { caseNumber: Like(`%-${year}`) } });
+    const sequential = countThisYear + 1;
+    newOccurrence.caseNumber = `${sequential}-${year}`;
 
-    if (currentUser.role === UserRole.SUPER_ADMIN || currentUser.role === UserRole.SERVIDOR_ADMINISTRATIVO) {
-      return queryBuilder.getMany();
-    }
-    if (currentUser.role === UserRole.PERITO_OFICIAL) {
-      queryBuilder.where('expert.id = :userId', { userId: currentUser.id });
-      return queryBuilder.getMany();
-    }
-    if (currentUser.role === UserRole.DELEGADO || currentUser.role === UserRole.OFICIAL_INVESTIGADOR) {
-      queryBuilder.where('authority.user_id = :userId', { userId: currentUser.id });
-      return queryBuilder.getMany();
-    }
-    return [];
-  }
+    // 5. Salvar a entidade completa no banco de dados
+    return this.occurrencesRepository.save(newOccurrence);
+  }
 
-  async findOne(id: string, currentUser: User): Promise<GeneralOccurrence> {
-    const occurrence = await this.occurrencesRepository.findOne({
-      where: { id },
-      relations: ['procedure', 'forensicService', 'responsibleExpert', 'requestingUnit', 'requestingAuthority', 'city', 'createdBy'],
-    });
+  async findAll(currentUser: User): Promise<GeneralOccurrence[]> {
+    const queryBuilder = this.occurrencesRepository.createQueryBuilder('occurrence')
+      .leftJoinAndSelect('occurrence.procedure', 'procedure')
+      .leftJoinAndSelect('occurrence.forensicService', 'forensicService')
+      .leftJoinAndSelect('occurrence.responsibleExpert', 'expert')
+      .leftJoinAndSelect('occurrence.requestingUnit', 'unit')
+      .leftJoinAndSelect('occurrence.requestingAuthority', 'authority')
+      .leftJoinAndSelect('occurrence.city', 'city')
+      .leftJoinAndSelect('occurrence.createdBy', 'creator');
 
-    if (!occurrence) throw new NotFoundException(`Ocorrência com o ID "${id}" não encontrada.`);
+    if (currentUser.role === UserRole.SUPER_ADMIN || currentUser.role === UserRole.SERVIDOR_ADMINISTRATIVO) {
+      return queryBuilder.getMany();
+    }
+    if (currentUser.role === UserRole.PERITO_OFICIAL) {
+      queryBuilder.where('expert.id = :userId', { userId: currentUser.id });
+      return queryBuilder.getMany();
+    }
+    if (currentUser.role === UserRole.DELEGADO || currentUser.role === UserRole.OFICIAL_INVESTIGADOR) {
+      queryBuilder.where('authority.user_id = :userId', { userId: currentUser.id });
+      return queryBuilder.getMany();
+    }
+    return [];
+  }
 
-    const isAdmin = currentUser.role === UserRole.SUPER_ADMIN || currentUser.role === UserRole.SERVIDOR_ADMINISTRATIVO;
-    const isOwner = occurrence.createdBy.id === currentUser.id;
-    const isResponsible = occurrence.responsibleExpert?.id === currentUser.id;
-    
-    if (!isAdmin && !isOwner && !isResponsible) {
-      throw new ForbiddenException('Você não tem permissão para visualizar esta ocorrência.');
-    }
-    
-    return occurrence;
-  }
+  async findOne(id: string, currentUser: User): Promise<GeneralOccurrence> {
+    const occurrence = await this.occurrencesRepository.findOne({
+      where: { id },
+      relations: ['procedure', 'forensicService', 'responsibleExpert', 'requestingUnit', 'requestingAuthority', 'city', 'createdBy'],
+    });
 
-  async update(id: string, updateDto: UpdateGeneralOccurrenceDto, currentUser: User): Promise<GeneralOccurrence> {
-    const occurrence = await this.occurrencesRepository.findOne({
-      where: { id },
-      relations: ['createdBy', 'responsibleExpert'],
-    });
+    if (!occurrence) throw new NotFoundException(`Ocorrência com o ID "${id}" não encontrada.`);
 
-    if (!occurrence) throw new NotFoundException(`Ocorrência com o ID "${id}" não encontrada.`);
+    const isAdmin = currentUser.role === UserRole.SUPER_ADMIN || currentUser.role === UserRole.SERVIDOR_ADMINISTRATIVO;
+    const isOwner = occurrence.createdBy.id === currentUser.id;
+    const isResponsible = occurrence.responsibleExpert?.id === currentUser.id;
+    
+    if (!isAdmin && !isOwner && !isResponsible) {
+      throw new ForbiddenException('Você não tem permissão para visualizar esta ocorrência.');
+    }
+    
+    return occurrence;
+  }
 
-    const isOwner = occurrence.createdBy.id === currentUser.id;
-    const isAdmin = currentUser.role === UserRole.SUPER_ADMIN;
+  async update(id: string, updateDto: UpdateGeneralOccurrenceDto, currentUser: User): Promise<GeneralOccurrence> {
+    const occurrence = await this.occurrencesRepository.findOne({
+      where: { id },
+      relations: ['createdBy', 'responsibleExpert'],
+    });
 
-    if (occurrence.isLocked && !isAdmin) {
-      throw new ForbiddenException('Esta ocorrência está travada e não pode mais ser editada.');
-    }
-    if (!isOwner && !isAdmin) {
-      throw new ForbiddenException('Você não tem permissão para editar esta ocorrência.');
-    }
+    if (!occurrence) throw new NotFoundException(`Ocorrência com o ID "${id}" não encontrada.`);
 
-    // --- LÓGICA PARA CAMPOS ADICIONAIS ---
+    const isOwner = occurrence.createdBy.id === currentUser.id;
+    const isAdmin = currentUser.role === UserRole.SUPER_ADMIN;
+
+    if (occurrence.isLocked && !isAdmin) {
+      throw new ForbiddenException('Esta ocorrência está travada e não pode mais ser editada.');
+    }
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenException('Você não tem permissão para editar esta ocorrência.');
+    }
+
     if (updateDto.additionalFields) {
       const oldFields = occurrence.additionalFields || {};
       const newFields = updateDto.additionalFields;
@@ -156,54 +151,24 @@ export class GeneralOccurrencesService {
       }
     }
 
-    const { procedureId, forensicServiceId, requestingUnitId, requestingAuthorityId, cityId, responsibleExpertId, ...occurrenceData } = updateDto;
-    const updatedOccurrence = this.occurrencesRepository.merge(occurrence, occurrenceData);
+    const { procedureId, forensicServiceId, requestingUnitId, requestingAuthorityId, cityId, responsibleExpertId, ...occurrenceData } = updateDto;
+    const updatedOccurrence = this.occurrencesRepository.merge(occurrence, occurrenceData);
 
-    // --- ATUALIZAÇÃO SEGURA DOS RELACIONAMENTOS ---
-    if (procedureId) {
-      const procedure = await this.procedureRepository.findOneBy({ id: procedureId });
-      if (!procedure) throw new NotFoundException(`Procedimento com ID ${procedureId} não encontrado.`);
-      updatedOccurrence.procedure = procedure;
-    }
-
-    if (forensicServiceId) {
-      const forensicService = await this.forensicServiceRepository.findOneBy({ id: forensicServiceId });
-      if (!forensicService) throw new NotFoundException(`Serviço pericial com ID ${forensicServiceId} não encontrado.`);
-      updatedOccurrence.forensicService = forensicService;
+    if (procedureId) {
+        const procedure = await this.procedureRepository.findOneBy({ id: procedureId });
+        if (!procedure) throw new NotFoundException(`Procedimento com ID ${procedureId} não encontrado.`);
+        updatedOccurrence.procedure = procedure;
     }
+    // Adicionar a mesma lógica para os outros relacionamentos aqui (forensicServiceId, etc.)
 
-    if (requestingUnitId) {
-      const requestingUnit = await this.unitRepository.findOneBy({ id: requestingUnitId });
-      if (!requestingUnit) throw new NotFoundException(`Unidade Demandante com ID ${requestingUnitId} não encontrada.`);
-      updatedOccurrence.requestingUnit = requestingUnit;
+    return this.occurrencesRepository.save(updatedOccurrence);
+  }
+
+  async remove(id: string, currentUser: User): Promise<void> {
+    const occurrence = await this.findOne(id, currentUser);
+    if (currentUser.role !== UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Apenas o Super Admin pode deletar ocorrências.');
     }
-
-    if (requestingAuthorityId) {
-      const requestingAuthority = await this.authorityRepository.findOneBy({ id: requestingAuthorityId });
-      if (!requestingAuthority) throw new NotFoundException(`Autoridade com ID ${requestingAuthorityId} não encontrada.`);
-      updatedOccurrence.requestingAuthority = requestingAuthority;
-    }
-
-    if (cityId) {
-      const city = await this.cityRepository.findOneBy({ id: cityId });
-      if (!city) throw new NotFoundException(`Cidade com ID ${cityId} não encontrada.`);
-      updatedOccurrence.city = city;
-    }
-
-    if (responsibleExpertId) {
-      const responsibleExpert = await this.userRepository.findOneBy({ id: responsibleExpertId });
-      if (!responsibleExpert) throw new NotFoundException(`Perito com ID ${responsibleExpertId} não encontrado.`);
-      updatedOccurrence.responsibleExpert = responsibleExpert;
-    }
-
-    return this.occurrencesRepository.save(updatedOccurrence);
-  }
-
-  async remove(id: string, currentUser: User): Promise<void> {
-    const occurrence = await this.findOne(id, currentUser);
-    if (currentUser.role !== UserRole.SUPER_ADMIN) {
-      throw new ForbiddenException('Apenas o Super Admin pode deletar ocorrências.');
-    }
-    await this.occurrencesRepository.softDelete(occurrence.id);
-  }
+    await this.occurrencesRepository.softDelete(occurrence.id);
+  }
 }

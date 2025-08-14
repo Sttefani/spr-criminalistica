@@ -5,7 +5,7 @@ import { GeneralOccurrencesService } from './general-occurrences.service';
 import { CreateGeneralOccurrenceDto } from './dto/create-general-occurrence.dto';
 import { UpdateGeneralOccurrenceDto } from './dto/update-general-occurrence.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from 'src/auth/guards/roles.guards';
+import { RolesGuard } from 'src/auth/guards/roles.guards'; // CORRIGIDO
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enums/users-role.enum';
 import { User } from 'src/users/entities/users.entity';
@@ -76,6 +76,3 @@ export class GeneralOccurrencesController {
     return this.occurrencesService.remove(id, currentUser);
   }
 }
-
-    
-
