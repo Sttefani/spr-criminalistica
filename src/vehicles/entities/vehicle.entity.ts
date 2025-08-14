@@ -44,6 +44,9 @@ export class Vehicle {
   @Column({ type: 'int' })
   initialMileage: number; // Quilometragem inicial de cadastro
 
+  @Column({ type: 'jsonb', nullable: true })
+  additionalFields: any;
+  
   // Os relacionamentos com VehicleLog, Fueling, etc. serão do tipo OneToMany
   // e serão adicionados aqui quando criarmos as outras entidades.
 
