@@ -129,7 +129,7 @@ export class GeneticComparisonDetailsService {
 
   async remove(id: string, currentUser: User): Promise<void> {
     if (currentUser.role !== UserRole.SUPER_ADMIN) {
-      throw new ForbiddenException('Apenas o Super Admin pode deletar este registro.');
+      throw new ForbiddenException('Você não tem permissão para deletar este registro.');
     }
     const result = await this.detailsRepository.softDelete(id);
     if (result.affected === 0) {

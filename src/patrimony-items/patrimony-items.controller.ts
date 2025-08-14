@@ -1,6 +1,6 @@
 // Arquivo: src/patrimony-items/patrimony-items.controller.ts
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { PatrimonyItemsService } from './patrimony-items.service';
 import { CreatePatrimonyItemDto } from './dto/create-patrimony-item.dto';
 import { UpdatePatrimonyItemDto } from './dto/update-patrimony-item.dto';
@@ -8,6 +8,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guards/roles.guards';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enums/users-role.enum';
+import { User } from 'src/users/entities/users.entity';
 
 @Controller('patrimony-items')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -58,7 +59,8 @@ export class PatrimonyItemsController {
    */
   @Delete(':id')
   @Roles(UserRole.SUPER_ADMIN)
-  remove(@Param('id') id: string) {
-    return this.itemsService.remove(id);
+  remove(@Param('id') id: string, @Req() req: any) {
+    const currentUser: User = req.user;
+    return this.itemsService.remove(id, currentUser);
   }
 }

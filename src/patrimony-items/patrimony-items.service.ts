@@ -12,6 +12,10 @@ import { PatrimonySubcategory } from 'src/patrimony-classifications/entities/pat
 
 @Injectable()
 export class PatrimonyItemsService {
+  [x: string]: any;
+  delete(id: string, currentUser: User) {
+    throw new Error('Method not implemented.');
+  }
   constructor(
     @InjectRepository(PatrimonyItem)
     private itemsRepository: Repository<PatrimonyItem>,
@@ -120,7 +124,7 @@ export class PatrimonyItemsService {
     }
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, currentUser: User): Promise<void> {
     const result = await this.itemsRepository.softDelete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Item patrimonial com o ID "${id}" não encontrado.`);

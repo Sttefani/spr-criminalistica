@@ -38,6 +38,7 @@ import { LocationsModule } from './locations/locations.module';
 import { PatrimonyItemsModule } from './patrimony-items/patrimony-items.module';
 import { PatrimonyMovementsModule } from './patrimony-movements/patrimony-movements.module';
 import { PatrimonyClassificationsModule } from './patrimony-classifications/patrimony-classifications.module';
+import { VehiclesModule } from './vehicles/vehicles.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { PatrimonyClassificationsModule } from './patrimony-classifications/patr
     PatrimonyItemsModule,
     PatrimonyMovementsModule,
     PatrimonyClassificationsModule,
+    VehiclesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateOccurrenceClassificationDto } from './dto/create-occurrence-classification.dto';
 import { UpdateOccurrenceClassificationDto } from './dto/update-occurrence-classification.dto';
 import { OccurrenceClassification } from './entities/occurrence-classification.entity';
+import { UserRole } from 'src/users/enums/users-role.enum';
+import { User } from '../users/entities/users.entity';
 
 @Injectable()
 export class OccurrenceClassificationsService {
@@ -51,8 +53,17 @@ export class OccurrenceClassificationsService {
     }
   }
 
-  async remove(id: string): Promise<void> {
-    const classification = await this.findOne(id);
-    await this.classificationsRepository.softDelete(classification.id);
+  async remove(id: string, currentUser: User): Promise<void> {
+  // 1. Verifica se o usuário tem a permissão necessária.
+  if (currentUser.role !== UserRole.SUPER_ADMIN) {
+    throw new ForbiddenException('Você não tem permissão para apagar registros.');
   }
+
+  // 2. Reutiliza o método findOne para garantir que a classificação existe.
+  // Se não existir, o findOne já lançará um NotFoundException.
+  const classification = await this.findOne(id);
+
+  // 3. Executa o soft delete no registro encontrado.
+  await this.classificationsRepository.softDelete(classification.id);
+}
 }
