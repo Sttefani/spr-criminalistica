@@ -46,6 +46,7 @@ import { StockItemsModule } from './stock-items/stock-items.module';
 import { StockEntriesModule } from './stock-entries/stock-entries.module';
 import { StockUsagesModule } from './stock-usages/stock-usages.module';
 import { ProvidersModule } from './providers/providers.module';
+import { SeedModule } from './common/seeds/seed.module';
 
 @Module({
   imports: [
@@ -97,6 +98,7 @@ import { ProvidersModule } from './providers/providers.module';
     StockEntriesModule,
     StockUsagesModule,
     ProvidersModule,
+    SeedModule, // <-- ADICIONE AQUI
   ],
   controllers: [AppController],
   providers: [AppService],
