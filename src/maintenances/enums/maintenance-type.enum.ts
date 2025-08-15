@@ -1,0 +1,7 @@
+export enum MaintenanceType {
+  PREVENTIVA = 'PREVENTIVA',
+  CORRETIVA = 'CORRETIVA',
+  TROCA_DE_OLEO = 'TROCA_DE_OLEO',
+  REVISAO = 'REVISAO',
+  OUTRO = 'OUTRO',
+}

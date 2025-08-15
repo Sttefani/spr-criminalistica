@@ -39,6 +39,13 @@ import { PatrimonyItemsModule } from './patrimony-items/patrimony-items.module';
 import { PatrimonyMovementsModule } from './patrimony-movements/patrimony-movements.module';
 import { PatrimonyClassificationsModule } from './patrimony-classifications/patrimony-classifications.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
+import { FuelingsModule } from './fuelings/fuelings.module';
+import { MaintenancesModule } from './maintenances/maintenances.module';
+import { MalfunctionReportsModule } from './malfunction-reports/malfunction-reports.module';
+import { StockItemsModule } from './stock-items/stock-items.module';
+import { StockEntriesModule } from './stock-entries/stock-entries.module';
+import { StockUsagesModule } from './stock-usages/stock-usages.module';
+import { ProvidersModule } from './providers/providers.module';
 
 @Module({
   imports: [
@@ -83,6 +90,13 @@ import { VehiclesModule } from './vehicles/vehicles.module';
     PatrimonyMovementsModule,
     PatrimonyClassificationsModule,
     VehiclesModule,
+    FuelingsModule,
+    MaintenancesModule,
+    MalfunctionReportsModule,
+    StockItemsModule,
+    StockEntriesModule,
+    StockUsagesModule,
+    ProvidersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
