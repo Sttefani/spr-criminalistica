@@ -1,6 +1,6 @@
 // Arquivo: src/preliminary-drug-tests/preliminary-drug-tests.controller.ts
 
-import { Controller, Post, Body, UseGuards, Req, Param, Patch, Get, Delete } from '@nestjs/common'; // Adicionados Get, Delete, Param, Patch
+import { Controller, Post, Body, UseGuards, Req, Param, Patch, Get, Delete, UseInterceptors, UploadedFile } from '@nestjs/common'; // Adicionados Get, Delete, Param, Patch
 import { PreliminaryDrugTestsService } from './preliminary-drug-tests.service';
 import { CreatePreliminaryDrugTestDto } from './dto/create-preliminary-drug-test.dto';
 import { UpdatePreliminaryDrugTestDto } from './dto/update-preliminary-drug-test.dto'; // Import do Update DTO
@@ -10,6 +10,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enums/users-role.enum';
 import { User } from 'src/users/entities/users.entity';
 import { SendToLabDto } from './dto/send-to-lab.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 const ALLOWED_ROLES_TO_CREATE = [
   UserRole.SERVIDOR_ADMINISTRATIVO,
@@ -62,6 +63,18 @@ export class PreliminaryDrugTestsController {
     @Body() sendToLabDto: SendToLabDto,
   ) {
     return this.pdtService.sendToLab(id, sendToLabDto);
+  }
+
+  @Post(':id/upload-report')
+  @Roles(...ALLOWED_ROLES_TO_CREATE) // Apenas quem pode criar/editar pode fazer upload
+  @UseInterceptors(FileInterceptor('file')) // Usa o interceptor do Multer
+  uploadReport(
+    @Param('id') id: string,
+    @UploadedFile() file: any, // Extrai o arquivo da requisição
+    @Req() req: any,
+  ) {
+    const currentUser: User = req.user;
+    return this.pdtService.uploadReport(id, file, currentUser);
   }
 
   // Apenas o SUPER_ADMIN pode deletar

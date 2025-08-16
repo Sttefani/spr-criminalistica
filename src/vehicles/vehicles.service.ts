@@ -2,7 +2,7 @@
 
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Like, Repository } from 'typeorm';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { Vehicle } from './entities/vehicle.entity';
@@ -29,6 +29,14 @@ export class VehiclesService {
 
   async findAll(): Promise<Vehicle[]> {
     return this.vehiclesRepository.find();
+  }
+
+  async findByPlate(plate?: string): Promise<Vehicle[]> {
+    const options: FindManyOptions<Vehicle> = {};
+    if (plate) {
+      options.where = { plate: Like(`%${plate.toUpperCase()}%`) };
+    }
+    return this.vehiclesRepository.find(options);
   }
 
   async findOne(id: string): Promise<Vehicle> {

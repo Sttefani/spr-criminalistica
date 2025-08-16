@@ -29,6 +29,13 @@ export class Document {
   @Column({ type: 'enum', enum: DocumentType })
   documentType: DocumentType;
 
+  @Column()
+  relatedEntityId: string; // O ID da entidade à qual este documento pertence (ex: ID da ocorrência)
+
+  @Column()
+  relatedEntityType: string; // O nome da entidade (ex: 'GeneralOccurrence', 'PatrimonyItem')
+  // --- FIM DO RELACIONAMENTO GENÉRICO ---
+
   // --- Relacionamentos ---
 
   @ManyToOne(() => PreliminaryDrugTest, { nullable: true })

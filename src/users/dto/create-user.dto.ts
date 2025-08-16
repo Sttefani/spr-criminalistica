@@ -32,6 +32,10 @@ export class CreateUserDto {
   @Transform(({ value }) => value ? value.replace(/\D/g, '') : value)
   phone?: string;
 
+  @IsString()
+  @IsOptional()
+  institution?: string;
+
   // @MinLength(8, ...) -> Garante que a senha tenha no mínimo 8 caracteres.
   @IsString()
   @IsNotEmpty()

@@ -148,4 +148,21 @@ export class DefinitiveDrugTestsService {
     const definitiveTest = await this.findOne(id);
     await this.definitiveRepository.softDelete(definitiveTest.id);
   }
+  async uploadReport(id: string, file: any, currentUser: User): Promise<DefinitiveDrugTest> {
+    const definitiveTest = await this.definitiveRepository.findOneBy({ id });
+    if (!definitiveTest) {
+      throw new NotFoundException(`Exame definitivo com o ID "${id}" não encontrado.`);
+    }
+    
+    // A lógica de permissão (quem pode fazer upload) pode ser adicionada aqui
+
+    // Chama o DocumentsService para fazer o upload, mas precisamos ajustar o uploadFile
+    // para lidar com diferentes tipos de "casos".
+    // Por enquanto, vamos simular. Precisaremos refatorar o DocumentsService.
+    console.log('Simulando upload para o Exame Definitivo:', id);
+
+    // TODO: Refatorar DocumentsService para ser mais genérico.
+    // Por agora, vamos apenas retornar o objeto.
+    return definitiveTest;
+  }
 }

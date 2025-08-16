@@ -1,6 +1,6 @@
 // Arquivo: src/vehicles/vehicles.controller.ts
 
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
 import { VehiclesService } from './vehicles.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
@@ -41,6 +41,10 @@ export class VehiclesController {
     return this.vehiclesService.findAll();
   }
 
+  @Get('search')
+  findByPlate(@Query('plate') plate?: string) {
+    return this.vehiclesService.findByPlate(plate);
+  }
   /**
    * Busca uma viatura pelo ID.
    * Acesso: Qualquer usuário logado

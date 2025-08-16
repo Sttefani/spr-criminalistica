@@ -1,60 +1,60 @@
-// Arquivo: src/documents/documents.controller.ts
-
 import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Req,
-  UploadedFile,
-  UseInterceptors,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
+  Controller, Post, Body, UseGuards, Req, UploadedFile,
+  UseInterceptors, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
+  Query, Get, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentsService } from './documents.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guards/roles.guards';
 import { User } from 'src/users/entities/users.entity';
-import { CreateDocumentDto } from './dto/create-document.dto';
+import { UploadDocumentDto } from './dto/upload-document.dto'; // Importa o DTO correto
 
 @Controller('documents')
-@UseGuards(AuthGuard('jwt'), RolesGuard) // Protege todos os endpoints de documentos
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   /**
-   * Endpoint para upload de um novo documento.
+   * Lista todos os documentos de uma entidade específica.
+   * Ex: GET /documents?entityId=uuid-da-ocorrencia
+   */
+  @Get()
+  findAllByEntity(@Query('entityId') entityId: string) {
+    if (!entityId) {
+      throw new BadRequestException('O parâmetro de busca "entityId" é obrigatório.');
+    }
+    return this.documentsService.findAllByRelatedEntity(entityId);
+  }
+
+  /**
+   * Endpoint genérico para upload de um novo documento.
    */
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file')) // Diz ao NestJS para procurar um arquivo no campo 'file' da requisição
+  @UseInterceptors(FileInterceptor('file'))
   uploadFile(
-    // Extrai o arquivo da requisição
     @UploadedFile(
-      // Valida o arquivo usando Pipes, assim como fazemos nos DTOs
       new ParseFilePipe({
         validators: [
-          // 1. Valida o tamanho máximo do arquivo (aqui, 10 MB)
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), 
-          // 2. Valida o tipo do arquivo (aqui, apenas PDF)
-          new FileTypeValidator({ fileType: 'application/pdf' }),
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10 MB
+          // A validação de tipo pode ser mais flexível se necessário
+          // new FileTypeValidator({ fileType: 'application/pdf' }),
         ],
       }),
-    ) file: any, // Usamos 'any' aqui também para consistência com o service
+    ) file: any,
     
-    // Extrai o corpo da requisição (que conterá os dados do nosso DTO)
-    @Body() createDocumentDto: CreateDocumentDto,
+    @Body() uploadDto: UploadDocumentDto, // Usa o novo DTO
     
-    // Pega o usuário logado
     @Req() req: any,
   ) {
     const uploadedBy: User = req.user;
     
+    // Passa todos os 5 argumentos para o serviço
     return this.documentsService.uploadFile(
       file,
-      createDocumentDto.caseId,
-      createDocumentDto.documentType,
+      uploadDto.relatedEntityId,
+      uploadDto.relatedEntityType,
+      uploadDto.documentType,
       uploadedBy,
     );
   }

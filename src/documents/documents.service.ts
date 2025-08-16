@@ -1,4 +1,6 @@
-import { Injectable, Inject, BadRequestException, NotFoundException } from '@nestjs/common';
+// Arquivo: src/documents/documents.service.ts
+
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Document } from './entities/document.entity';
@@ -7,19 +9,22 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { randomUUID } from 'crypto';
 import { DocumentType } from './enums/document-type.enum';
 import { User } from 'src/users/entities/users.entity';
-import { PreliminaryDrugTest } from 'src/preliminary-drug-tests/entities/preliminary-drug-test.entity';
 
 @Injectable()
 export class DocumentsService {
   constructor(
     @Inject(MINIO_CLIENT) private minioClient: S3Client,
     @InjectRepository(Document) private documentsRepository: Repository<Document>,
-    @InjectRepository(PreliminaryDrugTest) private pdtRepository: Repository<PreliminaryDrugTest>,
+    // O repositório do PreliminaryDrugTest não é mais necessário aqui
   ) {}
 
+  /**
+   * Faz o upload de um arquivo para uma entidade genérica.
+   */
   async uploadFile(
-    file: any, // Tipo alterado para 'any' para evitar o erro de compilação
-    caseId: string,
+    file: any,
+    relatedEntityId: string,
+    relatedEntityType: string,
     documentType: DocumentType,
     uploadedBy: User,
   ): Promise<Document> {
@@ -27,14 +32,10 @@ export class DocumentsService {
       throw new BadRequestException('Nenhum arquivo enviado.');
     }
 
-    const caseRecord = await this.pdtRepository.findOneBy({ id: caseId });
-    if (!caseRecord) {
-      throw new NotFoundException(`Caso com o ID "${caseId}" não encontrado.`);
-    }
-
-    const bucketName = 'laudos';
+    const bucketName = 'spr-pericia';
     const fileExtension = file.originalname.split('.').pop();
-    const storageKey = `laudos/${caseRecord.caseNumber}/${documentType.toLowerCase()}_${randomUUID()}.${fileExtension}`;
+    // O caminho no S3/MinIO agora é mais genérico
+    const storageKey = `${relatedEntityType}/${relatedEntityId}/${documentType.toLowerCase()}_${randomUUID()}.${fileExtension}`;
 
     const command = new PutObjectCommand({
       Bucket: bucketName,
@@ -51,10 +52,18 @@ export class DocumentsService {
       mimeType: file.mimetype,
       size: file.size,
       documentType,
-      case: caseRecord,
+      relatedEntityId, // Salva o ID da entidade pai
+      relatedEntityType, // Salva o nome da entidade pai
       uploadedBy,
     });
 
     return this.documentsRepository.save(newDocument);
+  }
+
+  /**
+   * Lista todos os documentos de uma entidade específica.
+   */
+  async findAllByRelatedEntity(entityId: string): Promise<Document[]> {
+    return this.documentsRepository.findBy({ relatedEntityId: entityId });
   }
 }

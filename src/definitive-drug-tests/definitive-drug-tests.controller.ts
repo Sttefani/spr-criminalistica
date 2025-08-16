@@ -1,6 +1,6 @@
 // Arquivo: src/definitive-drug-tests/definitive-drug-tests.controller.ts
 
-import { Controller, Post, Body, UseGuards, Req, Get, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Get, Patch, Param, Delete, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { DefinitiveDrugTestsService } from './definitive-drug-tests.service';
 import { CreateDefinitiveDrugTestDto } from './dto/create-definitive-drug-test.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -9,6 +9,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enums/users-role.enum';
 import { User } from 'src/users/entities/users.entity';
 import { UpdateDefinitiveDrugTestDto } from './dto/update-definitive-drug-test.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 // Vamos definir quem pode criar este tipo de registro.
 // Apenas o PERITO_OFICIAL (que trabalha no laboratório) pode.
@@ -55,6 +56,19 @@ export class DefinitiveDrugTestsController {
   @Roles(UserRole.SUPER_ADMIN)
   remove(@Param('id') id: string) {
     return this.definitiveService.remove(id);
+  }
+  // --- NOSSO NOVO ENDPOINT DE UPLOAD ---
+  @Post(':id/upload-report')
+  @Roles(UserRole.PERITO_OFICIAL, UserRole.SUPER_ADMIN)
+  @UseInterceptors(FileInterceptor('file'))
+  uploadReport(
+    @Param('id') id: string,
+    @UploadedFile() file: any,
+    @Req() req: any,
+  ) {
+    const currentUser: User = req.user;
+    // Precisamos criar o método 'uploadReport' no serviço
+    return this.definitiveService.uploadReport(id, file, currentUser);
   }
 
 }

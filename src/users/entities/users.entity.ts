@@ -40,6 +40,11 @@ export class User { // A CLASSE COMEÇA AQUI
   @Column({ type: 'varchar', length: 255, select: false })
   password: string;
 
+  // --- NOVO CAMPO PARA INSTITUIÇÃO ---
+  @Column({ type: 'varchar', nullable: true })
+  institution: string | null; // Ex: "Tribunal de Justiça", "Ministério Público"
+  // --- FIM DO NOVO CAMPO ---
+
   @Column({ type: 'enum', enum: UserRole, nullable: true})
   role: UserRole;
 
