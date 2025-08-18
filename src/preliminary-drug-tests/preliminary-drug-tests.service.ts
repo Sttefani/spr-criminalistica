@@ -1,5 +1,3 @@
-// Arquivo: src/preliminary-drug-tests/preliminary-drug-tests.service.ts
-
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
@@ -31,13 +29,11 @@ export class PreliminaryDrugTestsService {
     @InjectRepository(City) private cityRepository: Repository<City>,
     @InjectRepository(ForensicService) private forensicServiceRepository: Repository<ForensicService>,
     
-    // Injeção correta para a dependência circular
     @Inject(forwardRef(() => DocumentsService))
     private documentsService: DocumentsService,
   ) {}
 
   async create(createDto: CreatePreliminaryDrugTestDto, creatingUser: User): Promise<PreliminaryDrugTest> {
-    // ... (seu método create está correto, não precisa mudar)
     const { procedureId, occurrenceClassificationId, responsibleExpertId, requestingUnitId, requestingAuthorityId, cityId, ...pdtData } = createDto;
     const procedure = await this.procedureRepository.findOneBy({ id: procedureId });
     if (!procedure) throw new NotFoundException(`Procedimento com ID ${procedureId} não encontrado.`);
@@ -60,10 +56,9 @@ export class PreliminaryDrugTestsService {
   }
 
   async sendToLab(id: string, sendToLabDto: SendToLabDto): Promise<PreliminaryDrugTest> {
-    // ... (seu método sendToLab está correto, não precisa mudar)
     const pdt = await this.pdtRepository.findOneBy({ id });
     if (!pdt) throw new NotFoundException(`Exame preliminar com o ID "${id}" não encontrado.`);
-    if (pdt.caseStatus !== CaseStatus.PRELIMINARY_DONE) throw new BadRequestException(`Este caso não pode ser enviado para o laboratório, pois seu status atual é "${pdt.caseStatus}".`);
+    if (pdt.caseStatus !== CaseStatus.PRELIMINARY_DONE) throw new BadRequestException(`Este caso não pode ser enviado para o laboratório.`);
     const forensicService = await this.forensicServiceRepository.findOneBy({ id: sendToLabDto.forensicServiceId });
     if (!forensicService) throw new NotFoundException(`Serviço pericial com o ID "${sendToLabDto.forensicServiceId}" não encontrado.`);
     pdt.definitiveService = forensicService;
@@ -77,14 +72,11 @@ export class PreliminaryDrugTestsService {
 
   async findOne(id: string): Promise<PreliminaryDrugTest> {
     const pdt = await this.pdtRepository.findOneBy({ id });
-    if (!pdt) {
-      throw new NotFoundException(`Exame preliminar com o ID "${id}" não encontrado.`);
-    }
+    if (!pdt) throw new NotFoundException(`Exame preliminar com o ID "${id}" não encontrado.`);
     return pdt;
   }
 
   async update(id: string, updateDto: UpdatePreliminaryDrugTestDto, currentUser: User): Promise<PreliminaryDrugTest> {
-    // ... (seu método update está correto, não precisa mudar)
     const pdt = await this.pdtRepository.findOne({ where: { id }, relations: ['createdBy'] });
     if (!pdt) throw new NotFoundException(`Exame preliminar com o ID "${id}" não encontrado.`);
     const isOwner = pdt.createdBy.id === currentUser.id;

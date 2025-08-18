@@ -1,13 +1,10 @@
-// Arquivo: src/documents/entities/document.entity.ts
-
-import { PreliminaryDrugTest } from 'src/preliminary-drug-tests/entities/preliminary-drug-test.entity';
-import { User } from 'src/users/entities/users.entity';
-import {
-  Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
-  ManyToOne, JoinColumn, OneToOne,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { DocumentType } from '../enums/document-type.enum';
-import { PatrimonyItem } from 'src/patrimony-items/entities/patrimony-item.entity'; // Importa a entidade PatrimonyItem
+import { User } from 'src/users/entities/users.entity';
+import { GeneralOccurrence } from 'src/general-occurrences/entities/general-occurrence.entity';
+import { PreliminaryDrugTest } from 'src/preliminary-drug-tests/entities/preliminary-drug-test.entity';
+import { DefinitiveDrugTest } from 'src/definitive-drug-tests/entities/definitive-drug-test.entity';
+import { PatrimonyItem } from 'src/patrimony-items/entities/patrimony-item.entity';
 
 @Entity('documents')
 export class Document {
@@ -29,32 +26,29 @@ export class Document {
   @Column({ type: 'enum', enum: DocumentType })
   documentType: DocumentType;
 
-  @Column()
-  relatedEntityId: string; // O ID da entidade à qual este documento pertence (ex: ID da ocorrência)
+  // --- RELACIONAMENTOS "PAI" (APENAS UM DELES SERÁ PREENCHIDO) ---
 
-  @Column()
-  relatedEntityType: string; // O nome da entidade (ex: 'GeneralOccurrence', 'PatrimonyItem')
-  // --- FIM DO RELACIONAMENTO GENÉRICO ---
-
-  // --- Relacionamentos ---
+  @ManyToOne(() => GeneralOccurrence, { nullable: true })
+  @JoinColumn({ name: 'general_occurrence_id' })
+  generalOccurrence: GeneralOccurrence | null;
 
   @ManyToOne(() => PreliminaryDrugTest, { nullable: true })
-  @JoinColumn({ name: 'case_id' })
-  case?: PreliminaryDrugTest;
+  @JoinColumn({ name: 'preliminary_drug_test_id' })
+  preliminaryDrugTest: PreliminaryDrugTest | null;
 
-  // --- O RELACIONAMENTO QUE ESTÁ FALTANDO ---
+  @ManyToOne(() => DefinitiveDrugTest, { nullable: true })
+  @JoinColumn({ name: 'definitive_drug_test_id' })
+  definitiveDrugTest: DefinitiveDrugTest | null;
+  
   @ManyToOne(() => PatrimonyItem, (item) => item.documents, { nullable: true })
   @JoinColumn({ name: 'patrimony_item_id' })
-  patrimonyItem?: PatrimonyItem;
-  // --- FIM DO RELACIONAMENTO ---
+  patrimonyItem: PatrimonyItem | null;
+
+  // --- FIM DOS RELACIONAMENTOS "PAI" ---
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'uploaded_by_id' })
   uploadedBy: User;
-
-  @OneToOne(() => Document, { nullable: true })
-  @JoinColumn({ name: 'parent_document_id' })
-  parentDocument?: Document;
 
   @CreateDateColumn()
   createdAt: Date;

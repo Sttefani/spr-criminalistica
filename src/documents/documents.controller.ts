@@ -1,14 +1,15 @@
+// Arquivo: src/documents/documents.controller.ts
+
 import {
-  Controller, Post, Body, UseGuards, Req, UploadedFile,
-  UseInterceptors, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
-  Query, Get, BadRequestException,
+  Controller, Get, Post, Body, UseGuards, Req,
+  UploadedFile, UseInterceptors, Query, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentsService } from './documents.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guards/roles.guards';
 import { User } from 'src/users/entities/users.entity';
-import { UploadDocumentDto } from './dto/upload-document.dto'; // Importa o DTO correto
+import { UploadDocumentDto } from './dto/upload-document.dto';
 
 @Controller('documents')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -16,46 +17,37 @@ export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   /**
-   * Lista todos os documentos de uma entidade específica.
-   * Ex: GET /documents?entityId=uuid-da-ocorrencia
+   * Lista todos os documentos de uma entidade "pai" específica.
+   * Ex: GET /documents?parentId=uuid-da-ocorrencia
    */
   @Get()
-  findAllByEntity(@Query('entityId') entityId: string) {
-    if (!entityId) {
-      throw new BadRequestException('O parâmetro de busca "entityId" é obrigatório.');
+  findAllByParent(@Query('parentId') parentId: string) {
+    if (!parentId) {
+      throw new BadRequestException('O parâmetro de busca "parentId" é obrigatório.');
     }
-    return this.documentsService.findAllByRelatedEntity(entityId);
+    return this.documentsService.findAllByParent(parentId);
   }
 
   /**
    * Endpoint genérico para upload de um novo documento.
+   * O frontend envia o arquivo e os metadados (parentId, parentType, documentType).
    */
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   uploadFile(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10 MB
-          // A validação de tipo pode ser mais flexível se necessário
-          // new FileTypeValidator({ fileType: 'application/pdf' }),
-        ],
-      }),
-    ) file: any,
-    
-    @Body() uploadDto: UploadDocumentDto, // Usa o novo DTO
-    
+    @UploadedFile() file: any,
+    @Body() uploadDto: UploadDocumentDto, // Usa o nosso DTO para validar os metadados
     @Req() req: any,
   ) {
-    const uploadedBy: User = req.user;
+    const currentUser: User = req.user;
     
-    // Passa todos os 5 argumentos para o serviço
+    // Repassa todos os dados para o serviço
     return this.documentsService.uploadFile(
       file,
-      uploadDto.relatedEntityId,
-      uploadDto.relatedEntityType,
+      uploadDto.parentId,
+      uploadDto.parentType,
       uploadDto.documentType,
-      uploadedBy,
+      currentUser,
     );
   }
 }
