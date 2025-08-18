@@ -17,10 +17,12 @@ import { UserStatus } from 'src/users/enums/users-status.enum'; // Caminho corri
 import * as bcrypt from 'bcrypt';
 import { RequestingUnit } from 'src/requesting-units/entities/requesting-unit.entity';
 import { ForensicService } from 'src/forensic-services/entities/forensic-service.entity';
+import { Exclude, Expose } from 'class-transformer';
 
 @Entity('users')
 @Unique(['email'])
 @Unique(['cpf'])
+@Expose() // Você pode expor a classe inteira como um padrão
 export class User { // A CLASSE COMEÇA AQUI
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -36,7 +38,8 @@ export class User { // A CLASSE COMEÇA AQUI
 
   @Column({ type: 'varchar', length: 15, nullable: true })
   phone: string;
-
+  
+  @Exclude()
   @Column({ type: 'varchar', length: 255, select: false })
   password: string;
 
