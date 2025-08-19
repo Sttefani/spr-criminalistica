@@ -59,11 +59,42 @@ export class UsersService {
     return result as User;
   }
 
-  // O método update ainda está como placeholder, podemos arrumar depois
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  // DENTRO DE: src/users/users.service.ts
+
+  // ... (outros métodos como findOne, etc.)
+
+  // --- MÉTODO UPDATE CORRIGIDO ---
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    // O método 'preload' é a forma mais segura de atualizar.
+    // 1. Ele primeiro busca a entidade existente no banco pelo ID.
+    // 2. Depois, ele mescla os dados do 'updateUserDto' com a entidade encontrada.
+    // Isso garante que apenas os campos enviados sejam atualizados.
+    const user = await this.usersRepository.preload({
+      id: id,
+      ...updateUserDto,
+    });
+
+    // Se o preload não encontrar um usuário com aquele ID, ele retorna 'undefined'.
+    if (!user) {
+      throw new NotFoundException(`Usuário com o ID "${id}" não encontrado.`);
+    }
+
+    try {
+      // Salva a entidade mesclada e atualizada.
+      const savedUser = await this.usersRepository.save(user);
+      // Retorna o usuário salvo sem a senha.
+      const { password, ...result } = savedUser;
+      return result as User;
+    } catch (error) {
+      // Lida com o caso de você tentar alterar para um email/CPF que já pertence a outro usuário.
+      if (error.code === '23505') {
+        throw new ConflictException('O e-mail ou CPF informado já está em uso por outro usuário.');
+      }
+      throw error;
+    }
   }
 
+  // ... (outros métodos como remove, approve, etc.)
   remove(id: string) {
     return `This action removes a #${id} user`;
   }

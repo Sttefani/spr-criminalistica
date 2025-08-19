@@ -46,9 +46,11 @@ export class UsersController {
 
   // Os métodos abaixo ainda precisam ser protegidos, mas faremos isso depois
   @Patch(':id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
-  }
+  return this.usersService.update(id, updateUserDto);
+}
 
   @Delete(':id')
   remove(@Param('id') id: string) {
