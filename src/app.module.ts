@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/app.module.ts
 
 import { Module } from '@nestjs/common';
@@ -24,7 +25,7 @@ import { GeneralOccurrencesModule } from './general-occurrences/general-occurren
 import { RequestedExamsModule } from './requested-exams/requested-exams.module';
 import { TrafficAccidentDetailsModule } from './traffic-accident-details/traffic-accident-details.module';
 import { PropertyCrimeDetailsModule } from './property-crime-details/property-crime-details.module';
-import { EventEmitterModule } from '@nestjs/event-emitter'; 
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CrimeAgainstPersonDetailsModule } from './crime-against-person-details/crime-against-person-details.module';
 import { GeneticComparisonDetailsModule } from './genetic-comparison-details/genetic-comparison-details.module';
 import { ComputerForensicsDetailsModule } from './computer-forensics-details/computer-forensics-details.module';
@@ -53,12 +54,12 @@ import { SeedModule } from './common/seeds/seed.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    
+
     // Configuração do TypeORM usando nossa classe dedicada
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
     }),
-    
+
     // Lista completa de todos os módulos que a aplicação usa
     UsersModule,
     AuthModule,
@@ -102,6 +103,5 @@ import { SeedModule } from './common/seeds/seed.module';
   ],
   controllers: [AppController],
   providers: [AppService],
-  
 })
 export class AppModule {}

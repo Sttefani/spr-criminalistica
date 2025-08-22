@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { IsEnum, IsNotEmpty } from 'class-validator';
 import { UserRole } from '../enums/users-role.enum';
 

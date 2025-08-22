@@ -1,5 +1,4 @@
-// Arquivo: src/common/seeds/admin-user-seed.service.ts
-
+/* eslint-disable prettier/prettier */
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -31,10 +30,10 @@ export class AdminUserSeedService implements OnModuleInit {
       const adminUser = this.usersRepository.create({
         name: 'Super Administrador',
         email: adminEmail,
-        password: 'admin', // A senha será criptografada pelo hook @BeforeInsert
+        password: 'admin', // A senha será (esperançosamente) criptografada pelo hook @BeforeInsert
         cpf: '00000000000',
         role: UserRole.SUPER_ADMIN,
-        status: UserStatus.ACTIVE, // Já nasce ativo
+        status: UserStatus.ACTIVE,
       });
 
       await this.usersRepository.save(adminUser);

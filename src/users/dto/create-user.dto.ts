@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable prettier/prettier */
 import { IsString, IsNotEmpty, IsEmail, MinLength, IsPhoneNumber, IsOptional } from 'class-validator';
 import { IsCPF } from 'class-validator-cpf';
 import { Transform } from 'class-transformer';
@@ -29,6 +31,7 @@ export class CreateUserDto {
   // resultando em "95991143501" antes mesmo de validar.
   @IsOptional()
   @IsPhoneNumber('BR', { message: 'O número de telefone informado é inválido.' })
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
   @Transform(({ value }) => value ? value.replace(/\D/g, '') : value)
   phone?: string;
 

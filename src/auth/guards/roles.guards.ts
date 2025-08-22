@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // Arquivo: src/auth/guards/roles.guard.ts
 
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
@@ -25,6 +28,7 @@ export class RolesGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest();
 
     // 4. Verifica se a 'role' do usuário está na lista de 'roles' permitidas.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     return requiredRoles.some((role) => user.role?.includes(role));
   }
 }

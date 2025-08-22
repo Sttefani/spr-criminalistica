@@ -22,7 +22,7 @@ export class StockItem {
 
   @Column({ type: 'text', nullable: true })
   description?: string;
-  
+
   // --- CAMPO DE CATEGORIA (MAIS FLEXÍVEL) ---
   @Column()
   category: string; // Ex: "Reagentes de Genética", "Vidraria", "EPIs", "Consumíveis de Balística"
@@ -30,12 +30,12 @@ export class StockItem {
   @Column()
   unitOfMeasure: string; // Ex: "unidade", "caixa", "litro", "kg"
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0.30 })
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0.3 })
   safetyMargin: number; // Margem de Segurança (padrão 30%)
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   currentStock: number; // Estoque Atual (calculado)
-  
+
   // --- CAMPO DINÂMICO ---
   @Column({ type: 'jsonb', nullable: true })
   additionalFields?: any; // Ex: { "fornecedor_preferencial": "ACME Corp", "condicao_armazenamento": "Refrigerado" }

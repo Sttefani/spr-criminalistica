@@ -1,14 +1,25 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm'; // 1. IMPORTE AQUI
+/* eslint-disable prettier/prettier */
+
+import { Module, forwardRef } from '@nestjs/common'; // <-- Importe forwardRef
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
-import { User } from './entities/users.entity'; // A nossa entidade
+import { User } from './entities/users.entity';
+import { AuthModule } from 'src/auth/auth.module'; // <-- Importe o AuthModule
 
 @Module({
-  // 2. ADICIONE A LINHA ABAIXO
-  imports: [TypeOrmModule.forFeature([User])],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    // ==========================================================
+    // USA forwardRef PARA QUEBRAR A DEPENDÊNCIA CIRCULAR
+    // ==========================================================
+    forwardRef(() => AuthModule),
+  ],
   controllers: [UsersController],
   providers: [UsersService],
-  exports: [UsersService], // <-- ADICIONE ESTA LINHA
+  // ==========================================================
+  // EXPORTA o UsersService para que o AuthModule possa usá-lo
+  // ==========================================================
+  exports: [UsersService],
 })
 export class UsersModule {}

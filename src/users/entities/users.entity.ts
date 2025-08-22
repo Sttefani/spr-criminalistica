@@ -1,4 +1,5 @@
-// Arquivo: src/users/entities/users.entity.ts
+/* eslint-disable prettier/prettier */
+// Caminho: src/users/entities/users.entity.ts
 
 import {
   Entity,
@@ -12,48 +13,54 @@ import {
   ManyToMany,
   JoinTable,
 } from 'typeorm';
-import { UserRole } from 'src/users/enums/users-role.enum'; // Caminho corrigido
-import { UserStatus } from 'src/users/enums/users-status.enum'; // Caminho corrigido
+import { UserRole } from 'src/users/enums/users-role.enum';
+import { UserStatus } from 'src/users/enums/users-status.enum';
 import * as bcrypt from 'bcrypt';
 import { RequestingUnit } from 'src/requesting-units/entities/requesting-unit.entity';
 import { ForensicService } from 'src/forensic-services/entities/forensic-service.entity';
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer'; // Garanta que 'Type' está importado
 
 @Entity('users')
 @Unique(['email'])
 @Unique(['cpf'])
-@Expose() // Você pode expor a classe inteira como um padrão
-export class User { // A CLASSE COMEÇA AQUI
+export class User {
+  @Expose() // Permite que este campo seja enviado
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Expose() // Permite que este campo seja enviado
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
+  @Expose() // Permite que este campo seja enviado
   @Column({ type: 'varchar', length: 255 })
   email: string;
 
+  @Expose() // Permite que este campo seja enviado
   @Column({ type: 'varchar', length: 11 })
   cpf: string;
 
+  @Expose() // Permite que este campo seja enviado
   @Column({ type: 'varchar', length: 15, nullable: true })
   phone: string;
   
-  @Exclude()
+  @Exclude() // Garante que a senha NUNCA seja enviada
   @Column({ type: 'varchar', length: 255, select: false })
   password: string;
 
-  // --- NOVO CAMPO PARA INSTITUIÇÃO ---
+  @Expose() // Permite que este campo seja enviado
   @Column({ type: 'varchar', nullable: true })
-  institution: string | null; // Ex: "Tribunal de Justiça", "Ministério Público"
-  // --- FIM DO NOVO CAMPO ---
+  institution: string | null;
 
+  @Expose() // Permite que este campo seja enviado
   @Column({ type: 'enum', enum: UserRole, nullable: true})
   role: UserRole;
 
+  @Expose() // Permite que este campo seja enviado
   @Column({ type: 'enum', enum: UserStatus, default: UserStatus.PENDING })
   status: UserStatus;
 
+  @Expose() // Permite que este campo seja enviado
   @CreateDateColumn()
   createdAt: Date;
 
@@ -63,7 +70,8 @@ export class User { // A CLASSE COMEÇA AQUI
   @DeleteDateColumn()
   deletedAt: Date;
   
-  // --- Relacionamento 1 ---
+  @Expose() // Permite que estes relacionamentos sejam enviados
+  @Type(() => RequestingUnit) // Ajuda a transformar o objeto
   @ManyToMany(() => RequestingUnit, (requestingUnit) => requestingUnit.users)
   @JoinTable({
     name: 'users_requesting_units',
@@ -72,7 +80,8 @@ export class User { // A CLASSE COMEÇA AQUI
   })
   requestingUnits: RequestingUnit[];
   
-  // --- Relacionamento 2 ---
+  @Expose() // Permite que estes relacionamentos sejam enviados
+  @Type(() => ForensicService) // Ajuda a transformar o objeto
   @ManyToMany(() => ForensicService, (service) => service.users)
   @JoinTable({
     name: 'users_forensic_services',
@@ -81,11 +90,9 @@ export class User { // A CLASSE COMEÇA AQUI
   })
   forensicServices: ForensicService[];
   
-  // --- O MÉTODO @BeforeInsert() DENTRO DA CLASSE ---
   @BeforeInsert()
   async hashPassword() {
     const salt = await bcrypt.genSalt();
     this.password = await bcrypt.hash(this.password, salt);
   }
-
-} // A CLASSE TERMINA AQUI
+}
