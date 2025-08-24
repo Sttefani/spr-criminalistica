@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/procedures/dto/create-procedure.dto.ts
 
 import { IsString, IsNotEmpty, MaxLength } from 'class-validator';

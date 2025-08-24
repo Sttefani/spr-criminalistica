@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/authorities/entities/authority.entity.ts
 
 import { User } from 'src/users/entities/users.entity';
@@ -25,7 +26,7 @@ export class Authority {
 
   // Este é o relacionamento opcional com a tabela de usuários.
   // Ele nos permite saber se esta autoridade também é um usuário do sistema.
-  @OneToOne(() => User, { nullable: true, eager: true }) // eager: true carrega o usuário automaticamente
+  @OneToOne(() => User, { nullable: true }) // eager: true carrega o usuário automaticamente
   @JoinColumn({ name: 'user_id' })
   user?: User; // O '?' e nullable: true tornam o relacionamento opcional
 

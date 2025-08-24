@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable prettier/prettier */
 // Caminho: src/users/entities/users.entity.ts
 
@@ -12,6 +13,7 @@ import {
   Unique,
   ManyToMany,
   JoinTable,
+  OneToOne,
 } from 'typeorm';
 import { UserRole } from 'src/users/enums/users-role.enum';
 import { UserStatus } from 'src/users/enums/users-status.enum';
@@ -19,6 +21,7 @@ import * as bcrypt from 'bcrypt';
 import { RequestingUnit } from 'src/requesting-units/entities/requesting-unit.entity';
 import { ForensicService } from 'src/forensic-services/entities/forensic-service.entity';
 import { Exclude, Expose, Type } from 'class-transformer'; // Garanta que 'Type' está importado
+import { Authority } from 'src/authorities/entities/authority.entity';
 
 @Entity('users')
 @Unique(['email'])
@@ -89,6 +92,9 @@ export class User {
     inverseJoinColumn: { name: 'forensic_service_id', referencedColumnName: 'id' },
   })
   forensicServices: ForensicService[];
+  
+  @OneToOne(() => Authority, (authority) => authority.user)
+  authority: Authority; //
   
   @BeforeInsert()
   async hashPassword() {

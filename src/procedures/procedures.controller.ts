@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/procedures/procedures.controller.ts
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
@@ -19,7 +20,7 @@ export class ProceduresController {
    * Acesso: Apenas SUPER_ADMIN
    */
   @Post()
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO)
   create(@Body() createProcedureDto: CreateProcedureDto) {
     // Lembre-se de remover o '+' do id que o NestJS gera por padrão
     return this.proceduresService.create(createProcedureDto);
@@ -48,7 +49,7 @@ export class ProceduresController {
    * Acesso: Apenas SUPER_ADMIN
    */
   @Patch(':id')
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO)
   update(@Param('id') id: string, @Body() updateProcedureDto: UpdateProcedureDto) {
     return this.proceduresService.update(id, updateProcedureDto);
   }

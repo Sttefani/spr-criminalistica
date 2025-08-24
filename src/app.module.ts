@@ -1,16 +1,16 @@
 /* eslint-disable prettier/prettier */
-// Arquivo: src/app.module.ts
-
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TypeOrmConfigService } from './config/typeorm.config'; // Importa nossa nova classe de config
+import { TypeOrmConfigService } from './config/typeorm.config';
 
 // Importação de TODOS os seus módulos de negócio
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { AuthoritiesModule } from './authorities/authorities.module';
 import { CitiesModule } from './cities/cities.module';
 import { RequestingUnitsModule } from './requesting-units/requesting-units.module';
 import { ForensicServicesModule } from './forensic-services/forensic-services.module';
@@ -18,14 +18,12 @@ import { OccurrenceClassificationsModule } from './occurrence-classifications/oc
 import { ProceduresModule } from './procedures/procedures.module';
 import { ExamTypesModule } from './exam-types/exam-types.module';
 import { PreliminaryDrugTestsModule } from './preliminary-drug-tests/preliminary-drug-tests.module';
-import { AuthoritiesModule } from './authorities/authorities.module';
 import { DocumentsModule } from './documents/documents.module';
 import { DefinitiveDrugTestsModule } from './definitive-drug-tests/definitive-drug-tests.module';
 import { GeneralOccurrencesModule } from './general-occurrences/general-occurrences.module';
 import { RequestedExamsModule } from './requested-exams/requested-exams.module';
 import { TrafficAccidentDetailsModule } from './traffic-accident-details/traffic-accident-details.module';
 import { PropertyCrimeDetailsModule } from './property-crime-details/property-crime-details.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CrimeAgainstPersonDetailsModule } from './crime-against-person-details/crime-against-person-details.module';
 import { GeneticComparisonDetailsModule } from './genetic-comparison-details/genetic-comparison-details.module';
 import { ComputerForensicsDetailsModule } from './computer-forensics-details/computer-forensics-details.module';
@@ -47,22 +45,22 @@ import { StockItemsModule } from './stock-items/stock-items.module';
 import { StockEntriesModule } from './stock-entries/stock-entries.module';
 import { StockUsagesModule } from './stock-usages/stock-usages.module';
 import { ProvidersModule } from './providers/providers.module';
-import { SeedModule } from './common/seeds/seed.module';
 
 @Module({
   imports: [
+    // --- Módulos de Infraestrutura ---
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-
-    // Configuração do TypeORM usando nossa classe dedicada
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
     }),
+    EventEmitterModule.forRoot(),
 
-    // Lista completa de todos os módulos que a aplicação usa
+    // --- Módulos de Negócio ---
     UsersModule,
     AuthModule,
+    AuthoritiesModule,
     CitiesModule,
     RequestingUnitsModule,
     ForensicServicesModule,
@@ -70,14 +68,12 @@ import { SeedModule } from './common/seeds/seed.module';
     ProceduresModule,
     ExamTypesModule,
     PreliminaryDrugTestsModule,
-    AuthoritiesModule,
     DocumentsModule,
     DefinitiveDrugTestsModule,
     GeneralOccurrencesModule,
     RequestedExamsModule,
     TrafficAccidentDetailsModule,
     PropertyCrimeDetailsModule,
-    EventEmitterModule.forRoot(),
     CrimeAgainstPersonDetailsModule,
     GeneticComparisonDetailsModule,
     ComputerForensicsDetailsModule,
@@ -99,7 +95,6 @@ import { SeedModule } from './common/seeds/seed.module';
     StockEntriesModule,
     StockUsagesModule,
     ProvidersModule,
-    SeedModule, // <-- ADICIONE AQUI
   ],
   controllers: [AppController],
   providers: [AppService],

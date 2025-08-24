@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable prettier/prettier */
 // Arquivo: src/general-occurrences/entities/general-occurrence.entity.ts
 
 import { Authority } from 'src/authorities/entities/authority.entity';
