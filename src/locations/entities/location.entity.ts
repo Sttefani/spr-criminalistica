@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/locations/entities/location.entity.ts
 import {
   Entity,

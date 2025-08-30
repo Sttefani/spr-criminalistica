@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common'; // <-- 1. Adicione 'Query'
 import { LocationsService } from './locations.service';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
@@ -18,12 +19,26 @@ export class LocationsController {
     return this.locationsService.create(createLocationDto);
   }
 
+  // ==========================================================
+  // ESTE É O MÉTODO CORRIGIDO
+  // ==========================================================
   @Get()
-  findAll() {
-    return this.locationsService.findAll();
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO) // Protege a lista também
+  findAll(
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Query('search') search?: string,
+  ) {
+    // Converte as strings da URL para números, com valores padrão
+    const pageNumber = page ? parseInt(page, 10) : 1;
+    const limitNumber = limit ? parseInt(limit, 10) : 10;
+    
+    // Passa os parâmetros para o serviço
+    return this.locationsService.findAll(pageNumber, limitNumber, search);
   }
 
   @Get(':id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO)
   findOne(@Param('id') id: string) {
     return this.locationsService.findOne(id);
   }

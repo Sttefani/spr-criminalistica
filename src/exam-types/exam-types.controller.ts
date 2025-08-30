@@ -1,6 +1,5 @@
-// Arquivo: src/exam-types/exam-types.controller.ts
-
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { ExamTypesService } from './exam-types.service';
 import { CreateExamTypeDto } from './dto/create-exam-type.dto';
 import { UpdateExamTypeDto } from './dto/update-exam-type.dto';
@@ -10,53 +9,43 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/users/enums/users-role.enum';
 
 @Controller('exam-types')
-@UseGuards(AuthGuard('jwt'), RolesGuard) // Protege TODAS as rotas com login e verificação de roles
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 export class ExamTypesController {
   constructor(private readonly examTypesService: ExamTypesService) {}
 
-  /**
-   * Cria um novo tipo de exame.
-   * Acesso: SUPER_ADMIN, SERVIDOR_ADMINISTRATIVO
-   */
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO, UserRole.PERITO_OFICIAL)
   create(@Body() createExamTypeDto: CreateExamTypeDto) {
-    // O CLI pode ter gerado um '+id', já removi para consistência com o Service
     return this.examTypesService.create(createExamTypeDto);
   }
 
-  /**
-   * Lista todos os tipos de exame.
-   * Acesso: Qualquer usuário logado
-   */
+  // ==========================================================
+  // MÉTODO findAll CORRIGIDO PARA PAGINAÇÃO
+  // Acesso permitido para qualquer usuário logado (sem @Roles)
+  // ==========================================================
   @Get()
-  findAll() {
-    return this.examTypesService.findAll();
+  findAll(
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Query('search') search?: string,
+  ) {
+    const pageNumber = parseInt(page, 10) || 1;
+    const limitNumber = parseInt(limit, 10) || 10;
+    return this.examTypesService.findAll(pageNumber, limitNumber, search);
   }
 
-  /**
-   * Busca um tipo de exame pelo ID.
-   * Acesso: Qualquer usuário logado
-   */
+  // Acesso permitido para qualquer usuário logado (sem @Roles)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.examTypesService.findOne(id);
   }
 
-  /**
-   * Atualiza um tipo de exame.
-   * Acesso: SUPER_ADMIN, SERVIDOR_ADMINISTRATIVO
-   */
   @Patch(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO, UserRole.PERITO_OFICIAL)
   update(@Param('id') id: string, @Body() updateExamTypeDto: UpdateExamTypeDto) {
     return this.examTypesService.update(id, updateExamTypeDto);
   }
 
-  /**
-   * Deleta (soft delete) um tipo de exame.
-   * Acesso: APENAS SUPER_ADMIN
-   */
   @Delete(':id')
   @Roles(UserRole.SUPER_ADMIN)
   remove(@Param('id') id: string) {

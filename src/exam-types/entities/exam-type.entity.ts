@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/exam-types/entities/exam-type.entity.ts
 
 import {
