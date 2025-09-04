@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
@@ -13,8 +14,6 @@ import { Authority } from 'src/authorities/entities/authority.entity';
 import { City } from 'src/cities/entities/city.entity';
 import { ForensicService } from 'src/forensic-services/entities/forensic-service.entity';
 import { UserRole } from 'src/users/enums/users-role.enum';
-import { DocumentsService } from 'src/documents/documents.service';
-import { DocumentType } from 'src/documents/enums/document-type.enum';
 
 @Injectable()
 export class PreliminaryDrugTestsService {
@@ -29,8 +28,6 @@ export class PreliminaryDrugTestsService {
     @InjectRepository(City) private cityRepository: Repository<City>,
     @InjectRepository(ForensicService) private forensicServiceRepository: Repository<ForensicService>,
     
-    @Inject(forwardRef(() => DocumentsService))
-    private documentsService: DocumentsService,
   ) {}
 
   async create(createDto: CreatePreliminaryDrugTestDto, creatingUser: User): Promise<PreliminaryDrugTest> {
@@ -85,36 +82,8 @@ export class PreliminaryDrugTestsService {
     if (!isOwner && !isAdmin) throw new ForbiddenException('Você não tem permissão para editar este registro.');
     const updatedPdt = this.pdtRepository.merge(pdt, updateDto);
     return this.pdtRepository.save(updatedPdt);
+
   }
-
-  // --- MÉTODO UPLOADREPORT CORRIGIDO ---
-  async uploadReport(
-    id: string,
-    file: any,
-    currentUser: User,
-  ): Promise<PreliminaryDrugTest> {
-    // 1. Busca o caso e valida as permissões de edição
-    const pdt = await this.update(id, {}, currentUser);
-
-    // 2. Chama o DocumentsService com os parâmetros corretos
-    await this.documentsService.uploadFile(
-      file,
-      pdt.id,
-      'PreliminaryDrugTest',
-      DocumentType.PRELIMINARY_REPORT,
-      currentUser,
-    );
-
-    // 3. Trava o registro
-    pdt.isLocked = true;
-    pdt.lockedAt = new Date();
-    pdt.lockedBy = currentUser;
-
-    // 4. Salva o registro atualizado
-    return this.pdtRepository.save(pdt);
-  }
-  // --- FIM DO MÉTODO ---
-
   async remove(id: string): Promise<void> {
     const pdt = await this.findOne(id);
     await this.pdtRepository.softDelete(pdt.id);

@@ -1,48 +1,49 @@
-// Arquivo: src/general-occurrences/dto/create-general-occurrence.dto.ts
-
-import { IsString, IsNotEmpty, IsUUID, IsDateString, IsOptional, IsObject } from 'class-validator';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable prettier/prettier */
+import { IsString, IsNotEmpty, IsUUID, IsOptional, IsDateString, IsObject } from 'class-validator';
 
 export class CreateGeneralOccurrenceDto {
-  // --- Relacionamentos Obrigatórios ---
-  @IsUUID(undefined, { message: 'O ID do serviço pericial é inválido.' })
-  @IsNotEmpty({ message: 'O serviço pericial é obrigatório.' })
-  forensicServiceId: string;
-
-  @IsUUID(undefined, { message: 'O ID da cidade é inválido.' })
-  @IsNotEmpty({ message: 'A cidade é obrigatória.' })
-  cityId: string;
-
-  // --- Relacionamentos Opcionais ---
-  @IsUUID(undefined, { message: 'O ID do procedimento é inválido.' })
-  @IsOptional()
-  procedureId?: string;
-
-  @IsUUID(undefined, { message: 'O ID da unidade demandante é inválido.' })
-  @IsOptional()
-  requestingUnitId?: string;
-
-  @IsUUID(undefined, { message: 'O ID da autoridade demandante é inválido.' })
-  @IsOptional()
-  requestingAuthorityId?: string;
-
-  @IsUUID(undefined, { message: 'O ID do perito responsável é inválido.' })
-  @IsOptional()
-  responsibleExpertId?: string;
-
-  // --- Dados Diretos ---
-  @IsString()
-  @IsOptional()
-  procedureNumber?: string;
-
-  @IsDateString({}, { message: 'A data da ocorrência deve estar no formato ISO 8601.' })
+  @IsDateString({}, { message: 'A data da ocorrência deve estar em um formato de data válido.' })
   @IsNotEmpty({ message: 'A data da ocorrência é obrigatória.' })
   occurrenceDate: Date;
 
-  @IsString()
+  @IsString({ message: 'O histórico deve ser um texto.' })
   @IsNotEmpty({ message: 'O histórico é obrigatório.' })
   history: string;
 
-  @IsObject()
+  @IsUUID('4', { message: 'O Serviço Pericial deve ser um UUID válido.' })
+  @IsNotEmpty({ message: 'O Serviço Pericial é obrigatório.' })
+  forensicServiceId: string;
+
+  @IsUUID('4', { message: 'A Cidade deve ser um UUID válido.' })
+  @IsNotEmpty({ message: 'A Cidade é obrigatória.' })
+  cityId: string;
+  
+  @IsUUID('4', { message: 'A Classificação da Ocorrência deve ser um UUID válido.' })
+  @IsOptional()
+  occurrenceClassificationId?: string;
+
+  @IsUUID('4', { message: 'O Procedimento deve ser um UUID válido.' })
+  @IsOptional()
+  procedureId?: string;
+
+  @IsString({ message: 'O número do procedimento deve ser um texto.' })
+  @IsOptional()
+  procedureNumber?: string;
+
+  @IsUUID('4', { message: 'O Perito Responsável deve ser um código válido.' })
+  @IsOptional()
+  responsibleExpertId?: string;
+
+  @IsUUID('4', { message: 'A Unidade Demandante deve ser um código válido.' })
+  @IsOptional()
+  requestingUnitId?: string;
+
+  @IsUUID('4', { message: 'A Autoridade Requisitante deve ser um código válido.' })
+  @IsOptional()
+  requestingAuthorityId?: string;
+
+  @IsObject({ message: 'Os campos adicionais devem ser um objeto.' })
   @IsOptional()
   additionalFields?: any;
 }

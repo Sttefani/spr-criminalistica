@@ -1,6 +1,7 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/definitive-drug-tests/definitive-drug-tests.service.ts
 
-import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, In } from 'typeorm';
 import { CreateDefinitiveDrugTestDto } from './dto/create-definitive-drug-test.dto';

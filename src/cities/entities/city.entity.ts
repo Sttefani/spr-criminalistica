@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // File: src/cities/entities/city.entity.ts
 
 import {

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/preliminary-drug-tests/preliminary-drug-tests.module.ts
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -12,7 +13,6 @@ import { RequestingUnit } from 'src/requesting-units/entities/requesting-unit.en
 import { Authority } from 'src/authorities/entities/authority.entity';
 import { City } from 'src/cities/entities/city.entity';
 import { ForensicService } from 'src/forensic-services/entities/forensic-service.entity';
-import { DocumentsModule } from 'src/documents/documents.module';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { DocumentsModule } from 'src/documents/documents.module';
       City,
       ForensicService,
     ]),
-   forwardRef(() => DocumentsModule), // 2. ADICIONE AQUI
+
   ],
   controllers: [PreliminaryDrugTestsController], // <-- ADICIONE ESTA LINHA
   providers: [PreliminaryDrugTestsService]

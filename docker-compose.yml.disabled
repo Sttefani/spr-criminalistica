@@ -4,13 +4,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    #command: npm run start:dev
     restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
       - .:/usr/src/app
-      - /usr/src/app/node_modules # Prevents local node_modules from overwriting the container's
+      - /usr/src/app/node_modules # Impede que node_modules locais sobrescrevam os do contêiner
     environment:
       NODE_ENV: development
       DB_HOST: postgres
@@ -18,15 +17,20 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
       DB_DATABASE: spr_pericia_db
-      # Corrected MinIO credentials to match what the application expects
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: 'false'
       MINIO_BUCKET: 'spr-pericia'
+    # ==========================================================
+    # CORREÇÃO 1: Adicionado o 'minio' à lista de dependências saudáveis.
+    # A 'api' agora esperará tanto pelo 'postgres' quanto pelo 'minio'.
+    # ==========================================================
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   postgres:
@@ -53,7 +57,6 @@ services:
     restart: always
     command: server /data --console-address ":9001"
     environment:
-      # These variables are for the MinIO container itself
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     ports:
@@ -61,6 +64,16 @@ services:
       - "9001:9001"
     volumes:
       - minio_data:/data
+    # ==========================================================
+    # CORREÇÃO 2: Adicionado um 'healthcheck' para o MinIO.
+    # Isso permite que o Docker saiba quando o serviço está pronto.
+    # O comando 'mc ready local' verifica a saúde do alias padrão 'local'.
+    # ==========================================================
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

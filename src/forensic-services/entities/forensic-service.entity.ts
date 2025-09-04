@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/forensic-services/entities/forensic-service.entity.ts
 
 import { User } from 'src/users/entities/users.entity';

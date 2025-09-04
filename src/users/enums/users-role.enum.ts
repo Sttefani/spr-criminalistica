@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 export enum UserRole {
   PERITO_OFICIAL = 'perito_oficial',
   DELEGADO = 'delegado',

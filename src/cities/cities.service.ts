@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/cities/cities.service.ts
 
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';

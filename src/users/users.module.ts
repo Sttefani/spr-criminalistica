@@ -5,10 +5,11 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User } from './entities/users.entity';
 import { AuthModule } from 'src/auth/auth.module';
+import { GeneralOccurrence } from 'src/general-occurrences/entities/general-occurrence.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, GeneralOccurrence]),
 
     // A dependência com o AuthModule é necessária porque o UsersController
     // usa os Guards de autenticação e de perfil.

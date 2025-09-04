@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/documentoscopy-details/entities/documentoscopy-detail.entity.ts
 
 import { ExamType } from 'src/exam-types/entities/exam-type.entity';

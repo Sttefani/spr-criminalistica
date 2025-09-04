@@ -1,6 +1,8 @@
+/* eslint-disable prettier/prettier */
 export enum OccurrenceStatus {
   PENDING = 'AGUARDANDO_PERITO',
   IN_PROGRESS = 'EM_ANDAMENTO',
   COMPLETED = 'CONCLUIDA',
   CLOSED = 'ARQUIVADA',
+  CANCELLED = "CANCELADA",
 }

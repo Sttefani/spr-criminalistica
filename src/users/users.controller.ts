@@ -1,17 +1,16 @@
 /* eslint-disable prettier/prettier */
-// DENTRO DE: src/users/users.controller.ts
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
   Query,
-  UseGuards, 
-  ClassSerializerInterceptor, 
-  UseInterceptors 
+  UseGuards,
+  ClassSerializerInterceptor,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from 'src/auth/guards/roles.guards';
@@ -34,18 +33,25 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO, UserRole.PERITO_OFICIAL) // <-- Adicione aqui!
   @Get()
   findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
     @Query('status') status?: UserStatus,
     @Query('search') search?: string,
+    @Query('role') role?: string, // Aceita 'role' como uma string simples
   ) {
     const parsedPage = Number(page) || 1;
     const parsedLimit = Number(limit) || 10;
-    
-    return this.usersService.findAll(parsedPage, parsedLimit, status, search);
+
+    return this.usersService.findAll(
+      parsedPage,
+      parsedLimit,
+      status,
+      search,
+      role, // Passa a string para o serviço
+    );
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -89,4 +95,13 @@ export class UsersController {
   rejectUser(@Param('id') id: string) {
     return this.usersService.reject(id);
   }
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @Delete(':id/forensic-services/:serviceId')
+  unlinkUserFromForensicService(
+    @Param('id') userId: string,
+    @Param('serviceId') serviceId: string
+  ) {
+  return this.usersService.unlinkUserFromForensicService(userId, serviceId);
+}
 }

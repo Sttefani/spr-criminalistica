@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable prettier/prettier */
 // Arquivo: src/preliminary-drug-tests/preliminary-drug-tests.controller.ts
 
 import { Controller, Post, Body, UseGuards, Req, Param, Patch, Get, Delete, UseInterceptors, UploadedFile } from '@nestjs/common'; // Adicionados Get, Delete, Param, Patch
@@ -63,18 +65,6 @@ export class PreliminaryDrugTestsController {
     @Body() sendToLabDto: SendToLabDto,
   ) {
     return this.pdtService.sendToLab(id, sendToLabDto);
-  }
-
-  @Post(':id/upload-report')
-  @Roles(...ALLOWED_ROLES_TO_CREATE) // Apenas quem pode criar/editar pode fazer upload
-  @UseInterceptors(FileInterceptor('file')) // Usa o interceptor do Multer
-  uploadReport(
-    @Param('id') id: string,
-    @UploadedFile() file: any, // Extrai o arquivo da requisição
-    @Req() req: any,
-  ) {
-    const currentUser: User = req.user;
-    return this.pdtService.uploadReport(id, file, currentUser);
   }
 
   // Apenas o SUPER_ADMIN pode deletar

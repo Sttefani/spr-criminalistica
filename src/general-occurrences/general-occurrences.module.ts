@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/general-occurrences/general-occurrences.module.ts
 
 import { Module } from '@nestjs/common';
@@ -14,6 +15,7 @@ import { User } from 'src/users/entities/users.entity';
 import { RequestingUnit } from 'src/requesting-units/entities/requesting-unit.entity';
 import { Authority } from 'src/authorities/entities/authority.entity';
 import { City } from 'src/cities/entities/city.entity';
+import { OccurrenceClassification } from 'src/occurrence-classifications/entities/occurrence-classification.entity';
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { City } from 'src/cities/entities/city.entity';
       RequestedExamsModule,
       Authority,
       City,
+      OccurrenceClassification,
     ]),
     RequestedExamsModule, // Adiciona o módulo de exames solicitados
   ],

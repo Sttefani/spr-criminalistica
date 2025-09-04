@@ -1,8 +1,8 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/forensic-services/forensic-services.service.ts
-
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { CreateForensicServiceDto } from './dto/create-forensic-service.dto';
 import { UpdateForensicServiceDto } from './dto/update-forensic-service.dto';
 import { ForensicService } from './entities/forensic-service.entity';
@@ -38,6 +38,31 @@ export class ForensicServicesService {
   }
 
   /**
+   * NOVO MÉTODO: Retorna lista paginada de serviços periciais (para o frontend)
+   */
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+  ): Promise<{ data: ForensicService[], total: number, page: number, limit: number }> {
+    const skip = (page - 1) * limit;
+    const whereConditions: any = {};
+
+    if (search) {
+      whereConditions.name = ILike(`%${search}%`);
+    }
+
+    const [data, total] = await this.servicesRepository.findAndCount({
+      where: whereConditions,
+      order: { name: 'ASC' },
+      skip: skip,
+      take: limit,
+    });
+
+    return { data, total, page, limit };
+  }
+
+  /**
    * Busca um serviço pericial específico pelo seu ID.
    */
   async findOne(id: string): Promise<ForensicService> {
@@ -56,11 +81,9 @@ export class ForensicServicesService {
       id: id,
       ...updateDto,
     });
-
     if (!service) {
       throw new NotFoundException(`Serviço pericial com o ID "${id}" não encontrado.`);
     }
-
     try {
       return await this.servicesRepository.save(service);
     } catch (error) {

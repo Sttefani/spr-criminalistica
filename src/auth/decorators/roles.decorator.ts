@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { SetMetadata } from '@nestjs/common';
 import { UserRole } from 'src/users/enums/users-role.enum';
 

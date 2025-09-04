@@ -1,6 +1,6 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/patrimony-items/entities/patrimony-item.entity.ts
 
-import { Document } from 'src/documents/entities/document.entity';
 import { Location } from 'src/locations/entities/location.entity';
 import { PatrimonySubcategory } from 'src/patrimony-classifications/entities/patrimony-subcategory.entity';
 import { PatrimonyMovement } from 'src/patrimony-movements/entities/patrimony-movement.entity';
@@ -51,10 +51,6 @@ export class PatrimonyItem {
   @ManyToOne(() => Location, { eager: true })
   @JoinColumn({ name: 'current_location_id' })
   currentLocation: Location;
-
-  // --- Relacionamentos Filhos ---
-  @OneToMany(() => Document, (document) => document.patrimonyItem)
-  documents: Document[];
 
   @OneToMany(() => PatrimonyMovement, (movement) => movement.patrimonyItem)
   movements: PatrimonyMovement[];

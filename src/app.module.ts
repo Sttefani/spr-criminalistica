@@ -7,6 +7,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmConfigService } from './config/typeorm.config';
 
+// NOVO: 1. Importar o SeedModule para que a aplicação saiba que ele existe.
+import { SeedModule } from './common/seeds/seed.module'; // ⚠️ Verifique se este é o caminho correto para o seu SeedModule!
+
 // Importação de TODOS os seus módulos de negócio
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
@@ -18,7 +21,6 @@ import { OccurrenceClassificationsModule } from './occurrence-classifications/oc
 import { ProceduresModule } from './procedures/procedures.module';
 import { ExamTypesModule } from './exam-types/exam-types.module';
 import { PreliminaryDrugTestsModule } from './preliminary-drug-tests/preliminary-drug-tests.module';
-import { DocumentsModule } from './documents/documents.module';
 import { DefinitiveDrugTestsModule } from './definitive-drug-tests/definitive-drug-tests.module';
 import { GeneralOccurrencesModule } from './general-occurrences/general-occurrences.module';
 import { RequestedExamsModule } from './requested-exams/requested-exams.module';
@@ -57,6 +59,9 @@ import { ProvidersModule } from './providers/providers.module';
     }),
     EventEmitterModule.forRoot(),
 
+    
+    SeedModule,
+
     // --- Módulos de Negócio ---
     UsersModule,
     AuthModule,
@@ -68,7 +73,6 @@ import { ProvidersModule } from './providers/providers.module';
     ProceduresModule,
     ExamTypesModule,
     PreliminaryDrugTestsModule,
-    DocumentsModule,
     DefinitiveDrugTestsModule,
     GeneralOccurrencesModule,
     RequestedExamsModule,

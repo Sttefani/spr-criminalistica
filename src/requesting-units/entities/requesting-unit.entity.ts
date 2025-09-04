@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/requesting-units/entities/requesting-unit.entity.ts
 
 import { User } from 'src/users/entities/users.entity';

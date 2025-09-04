@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/preliminary-drug-tests/entities/preliminary-drug-test.entity.ts
 import { ForensicService } from 'src/forensic-services/entities/forensic-service.entity'; // Importe a entidade
 import { Authority } from 'src/authorities/entities/authority.entity';

@@ -20,7 +20,6 @@ export class OccurrenceClassificationsController {
   }
 
   @Get()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO) // Protege a lista
   findAll(
     @Query('page') page: string,
     @Query('limit') limit: string,
@@ -33,7 +32,6 @@ export class OccurrenceClassificationsController {
   }
 
   @Get(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO) // Protege a busca única
   findOne(@Param('id') id: string) {
     return this.classificationsService.findOne(id);
   }
