@@ -47,6 +47,7 @@ import { StockItemsModule } from './stock-items/stock-items.module';
 import { StockEntriesModule } from './stock-entries/stock-entries.module';
 import { StockUsagesModule } from './stock-usages/stock-usages.module';
 import { ProvidersModule } from './providers/providers.module';
+import { OccurrenceMovementsModule } from './occurrence-movements/occurrence-movements.module';
 
 @Module({
   imports: [
@@ -99,6 +100,7 @@ import { ProvidersModule } from './providers/providers.module';
     StockEntriesModule,
     StockUsagesModule,
     ProvidersModule,
+    OccurrenceMovementsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

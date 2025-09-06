@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable prettier/prettier */
 // Arquivo: src/auth/auth.controller.ts
 
 import { Controller, Request, Post, UseGuards } from '@nestjs/common';

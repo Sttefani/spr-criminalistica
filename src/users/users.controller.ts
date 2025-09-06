@@ -95,6 +95,23 @@ export class UsersController {
   rejectUser(@Param('id') id: string) {
     return this.usersService.reject(id);
   }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles(UserRole.SUPER_ADMIN, UserRole.PERITO_OFICIAL, UserRole.SERVIDOR_ADMINISTRATIVO)
+@Get(':id/forensic-services')
+getUserForensicServices(@Param('id') id: string) {
+  return this.usersService.getUserForensicServices(id);
+}
+
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles(UserRole.SUPER_ADMIN)
+@Post(':id/forensic-services')
+linkUserToForensicServices(
+  @Param('id') userId: string,
+  @Body() dto: { forensicServiceIds: string[] }
+) {
+  return this.usersService.linkUserToForensicServices(userId, dto.forensicServiceIds);
+}
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @Delete(':id/forensic-services/:serviceId')

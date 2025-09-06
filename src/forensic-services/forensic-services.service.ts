@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable prettier/prettier */
 // Arquivo: src/forensic-services/forensic-services.service.ts
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';

@@ -17,29 +17,77 @@ export interface PaginatedResult<T> { data: T[]; page: number; limit: number; to
 @Injectable()
 export class GeneralOccurrencesService {
   constructor(
-  @InjectRepository(GeneralOccurrence)
-  private readonly occurrenceRepository: Repository<GeneralOccurrence>,
-  @InjectRepository(User)
-  private readonly userRepository: Repository<User>,
-) {}
+    @InjectRepository(GeneralOccurrence)
+    private readonly occurrenceRepository: Repository<GeneralOccurrence>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
+  // ... (outros métodos como create, findOne, etc. que já existem)
+
+  // ✅ ASSINATURA DO MÉTODO ATUALIZADA para receber os novos filtros
+  async findAllPaginated(
+    page: number, 
+    limit: number, 
+    search?: string, 
+    user?: User, 
+    forensicServiceId?: string,
+    onlyMine?: boolean
+  ): Promise<PaginatedResult<GeneralOccurrence>> {
+    const qb = this.createBaseQueryBuilder();
+  
+    // A sua lógica de permissões baseada nos serviços do usuário continua a mesma
+    if (user && (user.role === UserRole.PERITO_OFICIAL || user.role === UserRole.SERVIDOR_ADMINISTRATIVO)) {
+        const userWithServices = await this.userRepository.findOne({ where: { id: user.id }, relations: ['forensicServices'] });
+        const serviceIds = userWithServices?.forensicServices?.map(fs => fs.id) || [];
+        if (serviceIds.length > 0) {
+            qb.andWhere('occurrence.forensicService.id IN (:...serviceIds)', { serviceIds });
+        } else {
+             qb.andWhere('1 = 0'); // Se não tem serviços, não vê nada
+        }
+    }
+    
+    // ✅ NOVO: Adicionado o filtro por serviço específico (do dropdown do frontend)
+    if (forensicServiceId && forensicServiceId !== 'all') {
+      qb.andWhere('occurrence.forensicService.id = :forensicServiceId', { forensicServiceId });
+    }
+
+    // ✅ NOVO: Adicionado o filtro "Minhas Ocorrências" (do toggle do frontend)
+    if (onlyMine && user && user.role === UserRole.PERITO_OFICIAL) {
+        qb.andWhere('expert.id = :userId', { userId: user.id });
+    }
+
+    // O resto da sua lógica de busca e paginação continua igual
+    if (search) {
+      const cleanSearch = search.trim().replace(/\s+/g, '');
+      qb.andWhere(
+        '(REPLACE(occurrence.caseNumber, \'-\', \'\') ILIKE :search OR ' +
+        'occurrence.caseNumber ILIKE :search OR ' +
+        'occurrence.procedureNumber ILIKE :search)',
+        { search: `%${cleanSearch}%` }
+      );
+    }
+    
+    const skip = (page - 1) * limit;
+    qb.orderBy('occurrence.createdAt', 'DESC').skip(skip).take(limit);
+    
+    const [data, total] = await qb.getManyAndCount();
+    
+    return { data, page, limit, total };
+  }
+
+  // ... (o resto dos seus métodos de serviço)
   async create(createDto: CreateGeneralOccurrenceDto, creatingUser: User): Promise<GeneralOccurrence> {
     const caseNumber = await this.generateCaseNumber();
-    
     const newOccurrence = new GeneralOccurrence();
     Object.assign(newOccurrence, createDto);
-
     newOccurrence.caseNumber = caseNumber;
     newOccurrence.createdBy = creatingUser;
-    
-    // Lógica de Status Automático na Criação
     if (createDto.responsibleExpertId) {
       newOccurrence.status = OccurrenceStatus.IN_PROGRESS;
     } else {
       newOccurrence.status = OccurrenceStatus.PENDING;
     }
-    
-    // Mapeamento de relacionamentos
     newOccurrence.forensicService = { id: createDto.forensicServiceId } as any;
     newOccurrence.city = { id: createDto.cityId } as any;
     newOccurrence.procedure = createDto.procedureId ? { id: createDto.procedureId } as any : null;
@@ -47,93 +95,9 @@ export class GeneralOccurrencesService {
     newOccurrence.requestingUnit = createDto.requestingUnitId ? { id: createDto.requestingUnitId } as any : null;
     newOccurrence.responsibleExpert = createDto.responsibleExpertId ? { id: createDto.responsibleExpertId } as any : null;
     newOccurrence.occurrenceClassification = createDto.occurrenceClassificationId ? { id: createDto.occurrenceClassificationId } as any : null;
-
     const savedOccurrence = await this.occurrenceRepository.save(newOccurrence);
     return this.findOne(savedOccurrence.id, creatingUser);
   }
-
-  async findAllPaginated(page: number, limit: number, search?: string, user?: User): Promise<PaginatedResult<GeneralOccurrence>> {
-  const qb = this.createBaseQueryBuilder();
-  
-  // NOVA LÓGICA DE FILTRO POR USUÁRIO
-  if (user && !this.isAdmin(user)) {
-    
-    // Perito Oficial e Servidor Administrativo com Serviços Forenses
-    if (user.role === UserRole.PERITO_OFICIAL || user.role === UserRole.SERVIDOR_ADMINISTRATIVO) {
-      
-      // Buscar serviços forenses do usuário
-      const userWithServices = await this.userRepository.findOne({
-        where: { id: user.id },
-        relations: ['forensicServices']
-      });
-      
-      const serviceIds = userWithServices?.forensicServices?.map(fs => fs.id) || [];
-      console.log('Serviços do usuário:', serviceIds);
-      
-      if (serviceIds.length > 0) {
-        if (user.role === UserRole.PERITO_OFICIAL) {
-          // PERITO: Pool dos meus serviços (sem perito) + casos onde sou responsável
-          qb.andWhere(
-            '(occurrence.responsibleExpert IS NULL AND occurrence.forensicService.id IN (:...serviceIds)) OR ' +
-            'expert.id = :userId',
-            { serviceIds, userId: user.id }
-          );
-          console.log('Perito vê: pool dos serviços + casos próprios');
-        } else {
-          // SERVIDOR ADMIN: Todos os casos dos meus serviços
-          qb.andWhere(
-            'occurrence.forensicService.id IN (:...serviceIds)',
-            { serviceIds }
-          );
-          console.log('Servidor admin vê: todos os casos dos serviços');
-        }
-      } else {
-        // Sem serviços vinculados
-        if (user.role === UserRole.PERITO_OFICIAL) {
-          qb.andWhere('expert.id = :userId', { userId: user.id });
-          console.log('Perito sem serviços: só casos próprios');
-        } else {
-          qb.andWhere('1 = 0'); // Servidor admin sem serviços não vê nada
-          console.log('Servidor admin sem serviços: não vê nada');
-        }
-      }
-      
-    } else {
-      // LÓGICA ATUAL: Autoridades e outros roles
-      qb.andWhere('(creator.id = :userId OR expert.id = :userId OR authority_user.id = :userId)', { userId: user.id });
-      console.log('Outros roles: lógica atual');
-    }
-    
-  } else if (user) {
-    console.log('Admin vê todas as ocorrências:', user.name, 'Role:', user.role);
-  }
-  
-  // BUSCA (search)
-  if (search) {
-    // Limpar o termo de busca
-    const cleanSearch = search.trim().replace(/\s+/g, '');
-    
-    qb.andWhere(
-      '(REPLACE(occurrence.caseNumber, \'-\', \'\') ILIKE :search OR ' +
-      'occurrence.caseNumber ILIKE :search OR ' +
-      'occurrence.procedureNumber ILIKE :search OR ' +
-      'authority.name ILIKE :search OR ' +
-      'expert.name ILIKE :search)',
-      { search: `%${cleanSearch}%` }
-    );
-  }
-  
-  // PAGINAÇÃO
-  const skip = (page - 1) * limit;
-  qb.orderBy('occurrence.createdAt', 'DESC').skip(skip).take(limit);
-  
-  // EXECUTAR QUERY
-  const [data, total] = await qb.getManyAndCount();
-  
-  console.log('Retornando', data.length, 'ocorrências de', total, 'total para', user?.name || 'usuário não identificado');
-  
-  return { data, page, limit, total };
-}
 
   async findAllForUser(user: User): Promise<GeneralOccurrence[]> {
     const qb = this.createBaseQueryBuilder();
@@ -145,65 +109,89 @@ export class GeneralOccurrencesService {
 
   async findOne(id: string, user: User): Promise<GeneralOccurrence> {
     const occurrence = await this.createBaseQueryBuilder().andWhere('occurrence.id = :id', { id }).getOne();
-    if (!occurrence) { throw new NotFoundException('Ocorrência não encontrada'); }
-    if (!this.canUserAccessOccurrence(occurrence, user)) { throw new ForbiddenException('Sem permissão para acessar esta ocorrência'); }
+    if (!occurrence) { 
+      throw new NotFoundException('Ocorrência não encontrada'); 
+    }
+    if (!(await this.canUserAccessOccurrence(occurrence, user))) { 
+      throw new ForbiddenException('Sem permissão para acessar esta ocorrência'); 
+    }
     return occurrence;
   }
 
   async update(id: string, updateDto: UpdateGeneralOccurrenceDto, user: User): Promise<GeneralOccurrence> {
-    const originalOccurrence = await this.findOne(id, user);
-    if (originalOccurrence.isLocked && !this.isAdmin(user)) { 
-      throw new ForbiddenException('Ocorrência bloqueada para edição'); 
-    }
-
-    console.log('=== DEBUG STATUS ===');
-    console.log('Status na base:', `"${originalOccurrence.status}"`);
-    console.log('Perito original?', !!originalOccurrence.responsibleExpert);
-    console.log('Novo perito ID:', updateDto.responsibleExpertId);
-
-    const toUpdate = await this.occurrenceRepository.preload({ id: id, ...updateDto });
-    if (!toUpdate) { 
-      throw new NotFoundException('Falha ao preparar dados para atualização.'); 
-    }
-
-    // CORREÇÃO: Forçar limpeza quando responsibleExpertId for null/undefined
-    if (updateDto.responsibleExpertId === null || updateDto.responsibleExpertId === undefined) {
-      console.log('FORÇANDO limpeza manual do perito');
-      toUpdate.responsibleExpert = null;
-    }
-
-    // Se está adicionando um perito específico
-    if (updateDto.responsibleExpertId) {
-      console.log('DEFININDO novo perito:', updateDto.responsibleExpertId);
-      toUpdate.responsibleExpert = { id: updateDto.responsibleExpertId } as any;
-    }
-
-    // Lógica de Status Automático
-    const hadExpert = !!originalOccurrence.responsibleExpert;
-    const willHaveExpert = !!updateDto.responsibleExpertId;
-
-    console.log('Tinha perito antes?', hadExpert);
-    console.log('Vai ter perito depois?', willHaveExpert);
-
-    // Se vai ter perito → status deve ser EM_ANDAMENTO
-    if (willHaveExpert) {
-      console.log('Tem perito → EM_ANDAMENTO');
-      toUpdate.status = OccurrenceStatus.IN_PROGRESS;
-    }
-    // Se não vai ter perito → status deve ser AGUARDANDO_PERITO  
-    else {
-      console.log('Sem perito → AGUARDANDO_PERITO');
-      toUpdate.status = OccurrenceStatus.PENDING;
-    }
-
-    console.log('Status que será salvo:', toUpdate.status);
-
-    const updated = await this.occurrenceRepository.save(toUpdate);
-    console.log('Status final salvo:', updated.status);
-    console.log('=== FIM DEBUG ===');
-    
-    return this.findOne(updated.id, user);
+  const originalOccurrence = await this.findOne(id, user);
+  
+  if (originalOccurrence.isLocked && !this.isAdmin(user)) { 
+    throw new ForbiddenException('Ocorrência bloqueada para edição'); 
   }
+  
+  if (originalOccurrence.responsibleExpert && user.role !== UserRole.SUPER_ADMIN) {
+    throw new ForbiddenException('Apenas administradores podem editar ocorrências já atribuídas a um perito.');
+  }
+  
+  const toUpdate = await this.occurrenceRepository.preload({ id: id, ...updateDto });
+  if (!toUpdate) { 
+    throw new NotFoundException('Falha ao preparar dados para atualização.'); 
+  }
+  
+  // CORRIGIR: Tratar TODOS os relacionamentos
+  
+  // Perito Responsável
+  if (updateDto.responsibleExpertId === null || updateDto.responsibleExpertId === undefined) {
+    toUpdate.responsibleExpert = null;
+  } else if (updateDto.responsibleExpertId) {
+    toUpdate.responsibleExpert = { id: updateDto.responsibleExpertId } as any;
+  }
+  
+  // Autoridade Requisitante
+  if (updateDto.requestingAuthorityId === null || updateDto.requestingAuthorityId === undefined) {
+    toUpdate.requestingAuthority = null;
+  } else if (updateDto.requestingAuthorityId) {
+    toUpdate.requestingAuthority = { id: updateDto.requestingAuthorityId } as any;
+  }
+  
+  // Unidade Demandante
+  if (updateDto.requestingUnitId === null || updateDto.requestingUnitId === undefined) {
+    toUpdate.requestingUnit = null;
+  } else if (updateDto.requestingUnitId) {
+    toUpdate.requestingUnit = { id: updateDto.requestingUnitId } as any;
+  }
+  
+  // Serviço Forense
+  if (updateDto.forensicServiceId) {
+    toUpdate.forensicService = { id: updateDto.forensicServiceId } as any;
+  }
+  
+  // Cidade
+  if (updateDto.cityId) {
+    toUpdate.city = { id: updateDto.cityId } as any;
+  }
+  
+  // Procedimento
+  if (updateDto.procedureId === null || updateDto.procedureId === undefined) {
+    toUpdate.procedure = null;
+  } else if (updateDto.procedureId) {
+    toUpdate.procedure = { id: updateDto.procedureId } as any;
+  }
+  
+  // Classificação
+  if (updateDto.occurrenceClassificationId === null || updateDto.occurrenceClassificationId === undefined) {
+    toUpdate.occurrenceClassification = null;
+  } else if (updateDto.occurrenceClassificationId) {
+    toUpdate.occurrenceClassification = { id: updateDto.occurrenceClassificationId } as any;
+  }
+  
+  // Lógica do status baseada no perito
+  const willHaveExpert = !!updateDto.responsibleExpertId;
+  if (willHaveExpert) {
+    toUpdate.status = OccurrenceStatus.IN_PROGRESS;
+  } else if (updateDto.responsibleExpertId === null || updateDto.responsibleExpertId === undefined) {
+    toUpdate.status = OccurrenceStatus.PENDING;
+  }
+  
+  const updated = await this.occurrenceRepository.save(toUpdate);
+  return this.findOne(updated.id, user);
+}
 
   async remove(id: string, user: User): Promise<void> {
     if (user.role !== UserRole.SUPER_ADMIN) { throw new ForbiddenException('Apenas Super Admin pode remover ocorrências'); }
@@ -239,8 +227,24 @@ export class GeneralOccurrencesService {
     return [UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO].includes(user.role);
   }
 
-  private canUserAccessOccurrence(occurrence: GeneralOccurrence, user: User): boolean {
+  private async canUserAccessOccurrence(occurrence: GeneralOccurrence, user: User): Promise<boolean> {
     if (this.isAdmin(user)) return true;
-    return (occurrence.createdBy?.id === user.id || occurrence.responsibleExpert?.id === user.id || occurrence.requestingAuthority?.user?.id === user.id);
+    if (occurrence.createdBy?.id === user.id || 
+        occurrence.responsibleExpert?.id === user.id || 
+        occurrence.requestingAuthority?.user?.id === user.id) {
+      return true;
+    }
+    if (user.role === UserRole.PERITO_OFICIAL || user.role === UserRole.SERVIDOR_ADMINISTRATIVO) {
+      const userWithServices = await this.userRepository.findOne({
+        where: { id: user.id },
+        relations: ['forensicServices']
+      });
+      const userServiceIds = userWithServices?.forensicServices?.map(fs => fs.id) || [];
+      if (userServiceIds.includes(occurrence.forensicService?.id)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
+

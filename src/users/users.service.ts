@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -162,18 +163,23 @@ export class UsersService {
   // MÉTODOS PARA GERENCIAR SERVIÇOS FORENSES
   // ==========================================================
 
-  async getUserForensicServices(userId: string): Promise<User> {
-    const user = await this.usersRepository.findOne({
-      where: { id: userId },
-      relations: ['forensicServices'],
-    });
-    
-    if (!user) {
-      throw new NotFoundException(`Usuário com ID "${userId}" não encontrado.`);
-    }
-    
-    return user;
+  async getUserForensicServices(userId: string, requestingUser?: any): Promise<User> {
+  // Se não for super admin, só pode ver seus próprios serviços
+  if (requestingUser && requestingUser.role !== 'super_admin' && requestingUser.id !== userId) {
+    throw new ForbiddenException('Você só pode ver seus próprios serviços');
   }
+
+  const user = await this.usersRepository.findOne({
+    where: { id: userId },
+    relations: ['forensicServices'],
+  });
+  
+  if (!user) {
+    throw new NotFoundException(`Usuário com ID "${userId}" não encontrado.`);
+  }
+  
+  return user;
+}
 
   async linkUserToForensicServices(userId: string, forensicServiceIds: string[]): Promise<User> {
     const user = await this.usersRepository.findOne({

@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query, ParseBoolPipe } from '@nestjs/common';
 import { GeneralOccurrencesService } from './general-occurrences.service';
 import { CreateGeneralOccurrenceDto } from './dto/create-general-occurrence.dto';
 import { UpdateGeneralOccurrenceDto } from './dto/update-general-occurrence.dto';
@@ -33,15 +33,22 @@ export class GeneralOccurrencesController {
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
     @Query('search') search?: string,
+    // ✅ 1. Adicionado parâmetro para o filtro de serviço
+    @Query('forensicServiceId') forensicServiceId?: string,
+    // ✅ 2. Adicionado parâmetro para o filtro "Minhas Ocorrências"
+    @Query('onlyMine', new ParseBoolPipe({ optional: true })) onlyMine?: boolean,
     @Req() req?: any
   ) {
     return this.occurrencesService.findAllPaginated(
       parseInt(page), 
       parseInt(limit), 
       search, 
-      req?.user
-    );
-  }
+      req?.user,
+      forensicServiceId, 
+      onlyMine 
+  );
+}
+  
  
   @Get('my-occurrences')
   findMyOccurrences(@Req() req: any) {
@@ -65,3 +72,4 @@ export class GeneralOccurrencesController {
     return this.occurrencesService.remove(id, req.user);
   }
 }
+
