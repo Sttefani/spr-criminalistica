@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Delete, Param, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, Req, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/guards/roles.guards';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -38,12 +38,23 @@ export class OccurrenceMovementsController {
   }
 
   // LISTAR OCORRÊNCIAS COM STATUS DE PRAZO (para a tela principal)
-  @Get('deadline-status')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO, UserRole.PERITO_OFICIAL)
-  async getOccurrencesWithDeadlineStatus(@Req() req: any) {
-    return this.movementsService.getOccurrencesWithDeadlineStatus(req.user);
-  }
-
+@Get('deadline-status')
+@Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO, UserRole.PERITO_OFICIAL)
+async getOccurrencesWithDeadlineStatus(
+  @Req() req: any,
+  @Query('page') page: number = 1,
+  @Query('limit') limit: number = 10,
+  @Query('search') search?: string
+) {
+  return this.movementsService.getOccurrencesWithDeadlineStatus(
+    req.user, 
+    {
+      page: Number(page),
+      limit: Number(limit),
+      search: search
+    }
+  );
+}
   // PRORROGAR PRAZO
   @Post('extend-deadline/:occurrenceId')
   @Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO, UserRole.PERITO_OFICIAL)

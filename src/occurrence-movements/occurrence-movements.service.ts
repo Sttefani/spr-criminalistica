@@ -83,22 +83,70 @@ export class OccurrenceMovementsService {
   }
 
   // LISTAR TODAS AS OCORRÊNCIAS COM STATUS DE PRAZO
-async getOccurrencesWithDeadlineStatus(user: User) {
+// LISTAR TODAS AS OCORRÊNCIAS COM STATUS DE PRAZO (PAGINADO)
+async getOccurrencesWithDeadlineStatus(
+  user: User,
+  paginationOptions?: {
+    page: number;
+    limit: number;
+    search?: string;
+  }
+) {
+  // Valores padrão para paginação
+  const page = paginationOptions?.page || 1;
+  const limit = paginationOptions?.limit || 10;
+  const search = paginationOptions?.search;
+
   const qb = this.occurrenceRepository.createQueryBuilder('occurrence')
     .leftJoinAndSelect('occurrence.forensicService', 'forensicService')
     .leftJoinAndSelect('occurrence.responsibleExpert', 'expert')
     .where('occurrence.deletedAt IS NULL');
 
+  // Aplicar filtros de busca se fornecido
+  if (search && search.trim()) {
+    qb.andWhere(
+      '(occurrence.caseNumber ILIKE :search OR ' +
+      'forensicService.name ILIKE :search OR ' +
+      'expert.name ILIKE :search)',
+      { search: `%${search.trim()}%` }
+    );
+  }
+
+  // Aplicar filtros de acesso do usuário
   await this.applyUserAccessFilters(qb, user);
+
+  // Calcular total antes da paginação
+  const total = await qb.getCount();
+
+  // Aplicar paginação
+  const offset = (page - 1) * limit;
+  qb.skip(offset).take(limit);
+
+  // Ordenar por data de criação (mais recentes primeiro)
+  qb.orderBy('occurrence.createdAt', 'DESC');
+
   const occurrences = await qb.getMany();
   
-  // RETORNO SIMPLES SEM CÁLCULOS DE PRAZO
-  return occurrences.map(occurrence => ({
+  // Mapear dados com status de prazo
+  const data = occurrences.map(occurrence => ({
     ...occurrence,
-    currentDeadline: new Date(), // Fixo temporário
-    isOverdue: false,           // Fixo temporário
-    isNearDeadline: false       // Fixo temporário
+    currentDeadline: this.calculateInitialDeadline(occurrence.createdAt),
+    isOverdue: this.isOverdue(occurrence.createdAt),
+    isNearDeadline: this.isNearDeadline(occurrence.createdAt)
   }));
+
+  // Retornar dados paginados com metadados
+  return {
+    data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNext: page < Math.ceil(total / limit),
+      hasPrev: page > 1
+    }
+  };
 }
 
 // Métodos auxiliares
