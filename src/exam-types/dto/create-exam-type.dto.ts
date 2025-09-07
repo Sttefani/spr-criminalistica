@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // Arquivo: src/exam-types/dto/create-exam-type.dto.ts
 
 import { IsString, IsNotEmpty, MaxLength, IsOptional } from 'class-validator';

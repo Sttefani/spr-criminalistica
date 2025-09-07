@@ -66,6 +66,20 @@ export class GeneralOccurrencesController {
     return this.occurrencesService.update(id, updateDto, req.user);
   }
 
+@Patch(':id/status')
+@Roles(UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO)
+changeStatus(
+  @Param('id') id: string, 
+  @Body() statusData: { newStatus: string; observations?: string },
+  @Req() req: any
+) {
+  return this.occurrencesService.changeStatus(
+    id, 
+    statusData.newStatus, 
+    statusData.observations?.trim() || null, 
+    req.user
+  );
+}
   @Delete(':id')
   @Roles(UserRole.SUPER_ADMIN)
   remove(@Param('id') id: string, @Req() req: any) {

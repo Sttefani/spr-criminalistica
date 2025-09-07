@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable prettier/prettier */
-import { IsString, IsNotEmpty, IsUUID, IsOptional, IsDateString, IsObject } from 'class-validator';
+import { IsString, IsNotEmpty, IsUUID, IsOptional, IsDateString, IsObject, IsArray } from 'class-validator';
 
 export class CreateGeneralOccurrenceDto {
   @IsDateString({}, { message: 'A data da ocorrência deve estar em um formato de data válido.' })
@@ -42,6 +42,11 @@ export class CreateGeneralOccurrenceDto {
   @IsUUID('4', { message: 'A Autoridade Requisitante deve ser um código válido.' })
   @IsOptional()
   requestingAuthorityId?: string;
+
+  @IsArray({ message: 'Os tipos de exame devem ser uma lista.' })
+  @IsUUID('4', { each: true, message: 'Cada tipo de exame deve ser um UUID válido.' })
+  @IsOptional()
+  examTypeIds?: string[];
 
   @IsObject({ message: 'Os campos adicionais devem ser um objeto.' })
   @IsOptional()

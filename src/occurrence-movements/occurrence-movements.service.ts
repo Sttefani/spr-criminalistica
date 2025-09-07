@@ -82,7 +82,6 @@ export class OccurrenceMovementsService {
     return movements.map(movement => this.mapToResponseDto(movement));
   }
 
-  // LISTAR TODAS AS OCORRÊNCIAS COM STATUS DE PRAZO
 // LISTAR TODAS AS OCORRÊNCIAS COM STATUS DE PRAZO (PAGINADO)
 async getOccurrencesWithDeadlineStatus(
   user: User,
@@ -90,17 +89,25 @@ async getOccurrencesWithDeadlineStatus(
     page: number;
     limit: number;
     search?: string;
+    onlyMyOccurrences?: boolean;
+    
   }
 ) {
   // Valores padrão para paginação
   const page = paginationOptions?.page || 1;
   const limit = paginationOptions?.limit || 10;
   const search = paginationOptions?.search;
+  const onlyMyOccurrences = paginationOptions?.onlyMyOccurrences || false;
 
   const qb = this.occurrenceRepository.createQueryBuilder('occurrence')
     .leftJoinAndSelect('occurrence.forensicService', 'forensicService')
     .leftJoinAndSelect('occurrence.responsibleExpert', 'expert')
     .where('occurrence.deletedAt IS NULL');
+
+  // Aplicar filtro "Minhas Ocorrências" se solicitado
+  if (onlyMyOccurrences && user.role === UserRole.PERITO_OFICIAL) {
+    qb.andWhere('expert.id = :userId', { userId: user.id });
+  }
 
   // Aplicar filtros de busca se fornecido
   if (search && search.trim()) {
@@ -112,8 +119,10 @@ async getOccurrencesWithDeadlineStatus(
     );
   }
 
-  // Aplicar filtros de acesso do usuário
-  await this.applyUserAccessFilters(qb, user);
+  // Aplicar filtros de acesso do usuário (apenas se não for "minhas ocorrências")
+  if (!onlyMyOccurrences) {
+    await this.applyUserAccessFilters(qb, user);
+  }
 
   // Calcular total antes da paginação
   const total = await qb.getCount();
@@ -128,13 +137,14 @@ async getOccurrencesWithDeadlineStatus(
   const occurrences = await qb.getMany();
   
   // Mapear dados com status de prazo
-  const data = occurrences.map(occurrence => ({
-    ...occurrence,
-    currentDeadline: this.calculateInitialDeadline(occurrence.createdAt),
-    isOverdue: this.isOverdue(occurrence.createdAt),
-    isNearDeadline: this.isNearDeadline(occurrence.createdAt)
-  }));
-
+  // Mapear dados com status de prazo
+const data = occurrences.map(occurrence => ({
+  ...occurrence,
+  currentDeadline: this.calculateInitialDeadline(occurrence.createdAt),
+  isOverdue: this.isOverdue(occurrence.createdAt, occurrence.status),
+  isNearDeadline: this.isNearDeadline(occurrence.createdAt, occurrence.status)
+  
+}));
   // Retornar dados paginados com metadados
   return {
     data,
@@ -150,17 +160,26 @@ async getOccurrencesWithDeadlineStatus(
 }
 
 // Métodos auxiliares
-private isOverdue(createdAt: Date): boolean {
+private isOverdue(createdAt: Date, status?: string): boolean {
+  // Se ocorrência finalizada, não está em atraso
+  if (status === 'CONCLUIDA' || status === 'CANCELADA') {
+    return false;
+  }
+  
   const deadline = this.calculateInitialDeadline(createdAt);
   return new Date() > deadline;
 }
 
-private isNearDeadline(createdAt: Date): boolean {
+private isNearDeadline(createdAt: Date, status?: string): boolean {
+  // Se ocorrência finalizada, não tem prazo próximo
+  if (status === 'CONCLUIDA' || status === 'CANCELADA') {
+    return false;
+  }
+  
   const deadline = this.calculateInitialDeadline(createdAt);
   const diffDays = Math.ceil((deadline.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
   return diffDays <= 2 && diffDays >= 0;
 }
-
   // PRORROGAR PRAZO
   async extendDeadline(
     occurrenceId: string,
@@ -209,13 +228,40 @@ private isNearDeadline(createdAt: Date): boolean {
     await this.movementRepository.save(movement);
   }
 }
-  // HELPERS PRIVADOS
+  // CONFIGURAÇÃO DE PRAZO - Altere aqui se necessário
+private readonly USE_BUSINESS_DAYS = true; // true = dias úteis, false = dias corridos
 
-  private calculateInitialDeadline(createdAt: Date): Date {
-    const deadline = new Date(createdAt);
-    deadline.setDate(deadline.getDate() + 10); // 10 dias úteis
-    return deadline;
+// MÉTODO 1: Dias corridos (10 dias incluindo fins de semana)
+private calculateInitialDeadlineCalendarDays(createdAt: Date): Date {
+  const deadline = new Date(createdAt);
+  deadline.setDate(deadline.getDate() + 10);
+  return deadline;
+}
+
+// MÉTODO 2: Dias úteis (10 dias pulando fins de semana)
+private calculateInitialDeadlineBusinessDays(createdAt: Date): Date {
+  const deadline = new Date(createdAt);
+  let daysAdded = 0;
+  
+  while (daysAdded < 10) {
+    deadline.setDate(deadline.getDate() + 1);
+    // Pular fins de semana (0 = domingo, 6 = sábado)
+    if (deadline.getDay() !== 0 && deadline.getDay() !== 6) {
+      daysAdded++;
+    }
   }
+  
+  return deadline;
+}
+
+// MÉTODO PRINCIPAL - Usa a configuração acima
+private calculateInitialDeadline(createdAt: Date): Date {
+  if (this.USE_BUSINESS_DAYS) {
+    return this.calculateInitialDeadlineBusinessDays(createdAt);
+  } else {
+    return this.calculateInitialDeadlineCalendarDays(createdAt);
+  }
+}
 
   private updateDeadlineFlags(movement: OccurrenceMovement): void {
     if (!movement.deadline) return;

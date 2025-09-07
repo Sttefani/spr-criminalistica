@@ -6,7 +6,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { GeneralOccurrencesService } from './general-occurrences.service';
 import { GeneralOccurrencesController } from './general-occurrences.controller';
 import { GeneralOccurrence } from './entities/general-occurrence.entity';
-import { RequestedExamsModule } from 'src/requested-exams/requested-exams.module'; // Importa o módulo filho
 
 // Importa todas as entidades que o GeneralOccurrencesService depende
 import { Procedure } from 'src/procedures/entities/procedure.entity';
@@ -16,6 +15,7 @@ import { RequestingUnit } from 'src/requesting-units/entities/requesting-unit.en
 import { Authority } from 'src/authorities/entities/authority.entity';
 import { City } from 'src/cities/entities/city.entity';
 import { OccurrenceClassification } from 'src/occurrence-classifications/entities/occurrence-classification.entity';
+import { ExamType } from 'src/exam-types/entities/exam-type.entity';
 
 @Module({
   imports: [
@@ -25,12 +25,11 @@ import { OccurrenceClassification } from 'src/occurrence-classifications/entitie
       ForensicService,
       User,
       RequestingUnit,
-      RequestedExamsModule,
+      ExamType,
       Authority,
       City,
       OccurrenceClassification,
     ]),
-    RequestedExamsModule, // Adiciona o módulo de exames solicitados
   ],
   controllers: [GeneralOccurrencesController],
   providers: [GeneralOccurrencesService],

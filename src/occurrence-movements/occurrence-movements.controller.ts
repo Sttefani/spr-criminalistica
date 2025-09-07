@@ -44,14 +44,16 @@ async getOccurrencesWithDeadlineStatus(
   @Req() req: any,
   @Query('page') page: number = 1,
   @Query('limit') limit: number = 10,
-  @Query('search') search?: string
+  @Query('search') search?: string,
+  @Query('onlyMyOccurrences') onlyMyOccurrences?: string
 ) {
   return this.movementsService.getOccurrencesWithDeadlineStatus(
     req.user, 
     {
       page: Number(page),
       limit: Number(limit),
-      search: search
+      search: search,
+      onlyMyOccurrences: onlyMyOccurrences === 'true'
     }
   );
 }

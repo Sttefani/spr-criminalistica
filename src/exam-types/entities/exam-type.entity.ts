@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
 // Arquivo: src/exam-types/entities/exam-type.entity.ts
 
+import { GeneralOccurrence } from 'src/general-occurrences/entities/general-occurrence.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -8,6 +9,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  ManyToMany,
 } from 'typeorm';
 
 @Entity('exam_types')
@@ -23,6 +25,9 @@ export class ExamType {
 
   @Column({ type: 'text', nullable: true })
   description: string; // Uma descrição opcional sobre o que é o exame
+
+  @ManyToMany(() => GeneralOccurrence, occurrence => occurrence.examTypes)
+   occurrences: GeneralOccurrence[];
 
   @CreateDateColumn()
   createdAt: Date;

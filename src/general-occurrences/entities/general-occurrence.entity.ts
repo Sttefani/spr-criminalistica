@@ -10,10 +10,11 @@ import { RequestingUnit } from 'src/requesting-units/entities/requesting-unit.en
 import { User } from 'src/users/entities/users.entity';
 import {
   Entity, PrimaryGeneratedColumn, Column, CreateDateColumn,
-  UpdateDateColumn, DeleteDateColumn, ManyToOne, JoinColumn, OneToMany, OneToOne, Index,
+  UpdateDateColumn, DeleteDateColumn, ManyToOne, JoinColumn, OneToOne, Index,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { OccurrenceStatus } from '../enums/occurrence-status.enum';
-import { RequestedExam } from 'src/requested-exams/entities/requested-exam.entity';
 import { TrafficAccidentDetail } from 'src/traffic-accident-details/entities/traffic-accident-detail.entity';
 import { PropertyCrimeDetail } from 'src/property-crime-details/entities/property-crime-detail.entity';
 import { CrimeAgainstPersonDetail } from 'src/crime-against-person-details/entities/crime-against-person-detail.entity';
@@ -26,6 +27,7 @@ import { VehicleIdentificationDetail } from 'src/vehicle-identification-details/
 import { EnvironmentalCrimeDetail } from 'src/environmental-crime-details/entities/environmental-crime-detail.entity';
 import { ChemistryForensicsDetail } from 'src/chemistry-forensics-details/entities/chemistry-forensics-detail.entity';
 import { OccurrenceClassification } from 'src/occurrence-classifications/entities/occurrence-classification.entity';
+import { ExamType } from 'src/exam-types/entities/exam-type.entity';
 
 @Entity('general_occurrences')
 @Index('IDX_general_occurrences_occurrence_date', ['occurrenceDate'])
@@ -96,6 +98,15 @@ export class GeneralOccurrence {
   @JoinColumn({ name: 'occurrence_classification_id' })
   occurrenceClassification: OccurrenceClassification | null;
 
+  // 3. ADICIONAR no lugar, dentro da seção "RELACIONAMENTOS FILHOS":
+  @ManyToMany(() => ExamType)
+  @JoinTable({
+    name: 'general_occurrence_exam_types',
+    joinColumn: { name: 'occurrence_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'exam_type_id', referencedColumnName: 'id' }
+  })
+  examTypes: ExamType[];
+
   // CAMPOS DE CONTROLE
 
   @Column({ 
@@ -123,14 +134,6 @@ export class GeneralOccurrence {
     comment: 'Campos adicionais dinâmicos em formato JSON'
   })
   additionalFields: Record<string, any> | null;
-
-  // RELACIONAMENTOS FILHOS (OneToMany)
-
-  @OneToMany(() => RequestedExam, (requestedExam) => requestedExam.occurrence, { 
-    cascade: true,
-    lazy: true 
-  })
-  requestedExams: RequestedExam[];
 
   // RELACIONAMENTOS DE DETALHES ESPECÍFICOS (OneToOne)
 
@@ -236,6 +239,13 @@ export class GeneralOccurrence {
   canBeEdited(): boolean {
     return !this.isLocked && !this.deletedAt;
   }
+
+  @Column({ 
+  type: 'text', 
+  nullable: true,
+  comment: 'Observações sobre a mudança de status'
+})
+statusChangeObservations: string | null;
 
   /**
    * Verifica se a ocorrência está finalizada

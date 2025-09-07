@@ -1,27 +1,31 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { GeneralOccurrence } from './entities/general-occurrence.entity';
 import { CreateGeneralOccurrenceDto } from './dto/create-general-occurrence.dto';
 import { UpdateGeneralOccurrenceDto } from './dto/update-general-occurrence.dto';
 import { User } from 'src/users/entities/users.entity';
 import { UserRole } from 'src/users/enums/users-role.enum';
 import { OccurrenceStatus } from './enums/occurrence-status.enum';
+import { ExamType } from 'src/exam-types/entities/exam-type.entity';
 
 export interface PaginatedResult<T> { data: T[]; page: number; limit: number; total: number; }
 
 @Injectable()
 export class GeneralOccurrencesService {
   constructor(
-    @InjectRepository(GeneralOccurrence)
-    private readonly occurrenceRepository: Repository<GeneralOccurrence>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-  ) {}
+  @InjectRepository(GeneralOccurrence)
+  private readonly occurrenceRepository: Repository<GeneralOccurrence>,
+  @InjectRepository(User)
+  private readonly userRepository: Repository<User>,
+  @InjectRepository(ExamType)
+  private readonly examTypeRepository: Repository<ExamType>,
+) {}
 
   // ... (outros métodos como create, findOne, etc. que já existem)
 
@@ -78,10 +82,11 @@ export class GeneralOccurrencesService {
 
   // ... (o resto dos seus métodos de serviço)
   async create(createDto: CreateGeneralOccurrenceDto, creatingUser: User): Promise<GeneralOccurrence> {
-    const caseNumber = await this.generateCaseNumber();
+    const { examTypeIds, ...restDto } = createDto;
+     const caseNumber = await this.generateCaseNumber();
     const newOccurrence = new GeneralOccurrence();
-    Object.assign(newOccurrence, createDto);
-    newOccurrence.caseNumber = caseNumber;
+    Object.assign(newOccurrence, restDto);   
+     newOccurrence.caseNumber = caseNumber;
     newOccurrence.createdBy = creatingUser;
     if (createDto.responsibleExpertId) {
       newOccurrence.status = OccurrenceStatus.IN_PROGRESS;
@@ -95,6 +100,14 @@ export class GeneralOccurrencesService {
     newOccurrence.requestingUnit = createDto.requestingUnitId ? { id: createDto.requestingUnitId } as any : null;
     newOccurrence.responsibleExpert = createDto.responsibleExpertId ? { id: createDto.responsibleExpertId } as any : null;
     newOccurrence.occurrenceClassification = createDto.occurrenceClassificationId ? { id: createDto.occurrenceClassificationId } as any : null;
+        if (examTypeIds && examTypeIds.length > 0) {
+      const examTypes = await this.examTypeRepository.find({
+        where: { id: In(examTypeIds) }
+      });
+  newOccurrence.examTypes = examTypes;
+} else {
+  newOccurrence.examTypes = [];
+}
     const savedOccurrence = await this.occurrenceRepository.save(newOccurrence);
     return this.findOne(savedOccurrence.id, creatingUser);
   }
@@ -119,8 +132,9 @@ export class GeneralOccurrencesService {
   }
 
   async update(id: string, updateDto: UpdateGeneralOccurrenceDto, user: User): Promise<GeneralOccurrence> {
+  const { examTypeIds, ...restDto } = updateDto;
   const originalOccurrence = await this.findOne(id, user);
-  
+
   if (originalOccurrence.isLocked && !this.isAdmin(user)) { 
     throw new ForbiddenException('Ocorrência bloqueada para edição'); 
   }
@@ -129,8 +143,8 @@ export class GeneralOccurrencesService {
     throw new ForbiddenException('Apenas administradores podem editar ocorrências já atribuídas a um perito.');
   }
   
-  const toUpdate = await this.occurrenceRepository.preload({ id: id, ...updateDto });
-  if (!toUpdate) { 
+    const toUpdate = await this.occurrenceRepository.preload({ id: id, ...restDto }); 
+     if (!toUpdate) { 
     throw new NotFoundException('Falha ao preparar dados para atualização.'); 
   }
   
@@ -180,6 +194,17 @@ export class GeneralOccurrencesService {
   } else if (updateDto.occurrenceClassificationId) {
     toUpdate.occurrenceClassification = { id: updateDto.occurrenceClassificationId } as any;
   }
+  // Tratar examTypes
+        if (examTypeIds !== undefined) {
+          if (examTypeIds.length > 0) {
+            const examTypes = await this.examTypeRepository.find({
+              where: { id: In(examTypeIds) }
+            });
+            toUpdate.examTypes = examTypes;
+          } else {
+            toUpdate.examTypes = [];
+          }
+        }
   
   // Lógica do status baseada no perito
   const willHaveExpert = !!updateDto.responsibleExpertId;
@@ -210,6 +235,7 @@ export class GeneralOccurrencesService {
       .leftJoinAndSelect('occurrence.city', 'city')
       .leftJoinAndSelect('occurrence.occurrenceClassification', 'classification')
       .leftJoinAndSelect('occurrence.createdBy', 'creator')
+      .leftJoinAndSelect('occurrence.examTypes', 'examTypes')
       .where('occurrence.deletedAt IS NULL');
   }
 
@@ -246,5 +272,39 @@ export class GeneralOccurrencesService {
     }
     return false;
   }
+  // MÉTODO PARA ALTERAR STATUS DA OCORRÊNCIA
+async changeStatus(
+  id: string, 
+  newStatus: string, 
+  observations: string | null, 
+  user: User
+): Promise<GeneralOccurrence> {
+  // 1. Verificar se ocorrência existe e usuário tem acesso
+  const occurrence = await this.findOne(id, user);
+  
+  // 2. Validar se status atual permite mudança
+  if (occurrence.status !== OccurrenceStatus.IN_PROGRESS) {
+    throw new ForbiddenException(`Não é possível alterar status. Status atual: ${occurrence.status}`);
+  }
+  
+  // 3. Validar novo status
+  const allowedNewStatuses = [OccurrenceStatus.COMPLETED, OccurrenceStatus.CANCELLED];
+  if (!allowedNewStatuses.includes(newStatus as OccurrenceStatus)) {
+    throw new ForbiddenException(`Status inválido. Permitidos: ${allowedNewStatuses.join(', ')}`);
+  }
+  
+  // 4. Validar permissões (apenas super_admin e servidor_administrativo)
+  if (![UserRole.SUPER_ADMIN, UserRole.SERVIDOR_ADMINISTRATIVO].includes(user.role)) {
+    throw new ForbiddenException('Apenas administradores podem alterar status de ocorrências');
+  }
+  
+  // 5. Atualizar status
+  await this.occurrenceRepository.update(id, {
+  status: newStatus as OccurrenceStatus,
+  statusChangeObservations: observations
+});
+  // 6. Retornar ocorrência atualizada
+  return this.findOne(id, user);
+}
 }
 
